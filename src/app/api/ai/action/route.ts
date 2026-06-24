@@ -6,7 +6,7 @@ import { AdvanceService } from '@/app/lib/services/advance';
 import { LeaveService } from '@/app/lib/services/leave';
 import { PayrollService } from '@/app/lib/services/payroll';
 
-// ১. এপিআই রিকোয়েস্ট ভ্যালিডেশন জোড স্কিমা
+// ১. অত্যন্ত সুরক্ষিত ও বুদ্ধিমান জোড (Zod) ভ্যালিডেশন স্কিমা (Coercion সহ)
 const aiRequestSchema = z.object({
   phase: z.enum(['draft', 'confirm']),
   pending_action_id: z.string().optional(),
@@ -18,15 +18,26 @@ const aiRequestSchema = z.object({
     'lock_payroll',
     'unlock_payroll'
   ]),
-  raw_message: z.string(),
+  raw_message: z.string().default(''),
   parameters: z.object({
     employee_name: z.string().optional(),
-    amount: z.number().optional(),
-    date: z.string().optional(), // Expected format: 'DD-MM-YYYY'
+    // n8n থেকে পাঠানো স্ট্রিং "5000" কে স্বয়ংক্রিয়ভাবে নাম্বারে রূপান্তর করবে
+    amount: z.preprocess(
+      (val) => (val === '' || val === undefined ? undefined : Number(val)),
+      z.number().optional()
+    ),
+    date: z.string().optional(), 
     leave_type: z.enum(['paid', 'unpaid', 'sick', 'emergency', 'suspension']).optional(),
     reason: z.string().optional(),
-    month: z.string().optional(), // '01'-'12'
-    year: z.string().optional()   // '2026'
+    // সংখ্যা বা স্ট্রিং যেকোনো ফরম্যাটে মাস ও বছর পাঠালে তা স্বয়ংক্রিয়ভাবে স্ট্রিংয়ে কনভার্ট হবে
+    month: z.preprocess(
+      (val) => (val !== undefined && val !== null ? String(val) : undefined),
+      z.string().optional()
+    ),
+    year: z.preprocess(
+      (val) => (val !== undefined && val !== null ? String(val) : undefined),
+      z.string().optional()
+    )
   }).optional()
 });
 
@@ -44,7 +55,8 @@ export async function POST(request: NextRequest) {
   let rawBody: unknown;
   try {
     rawBody = await request.json();
-    // জোড স্কিমা দিয়ে ডাটা ভ্যালিডেট করা
+    
+    // জোড স্কিমা দিয়ে ডাটা প্রাক-প্রসেস ও ভ্যালিডেট করা
     const validatedData = aiRequestSchema.parse(rawBody);
     const { phase, action, raw_message, parameters, pending_action_id } = validatedData;
 
@@ -53,7 +65,7 @@ export async function POST(request: NextRequest) {
     const adminName = 'এআই ম্যানেজার (টেলিগ্রাম)';
 
     // ==========================================
-    // ধাপ ১: খসড়া বা ড্রাফট ফেজ (Phase: Draft)
+    // "draft" ফেজ (Phase: Draft)
     // ==========================================
     if (phase === 'draft') {
       if (!parameters) {
@@ -90,7 +102,6 @@ export async function POST(request: NextRequest) {
 
         // একাধিক মিল পাওয়া গেলে (Ambiguity Resolution)
         if (empList.length > 1) {
-          // শাখা নাল হতে পারে তা বিবেচনা করে নিরাপদ ঐচ্ছিক চেইনিং (Optional Chaining) ব্যবহার করা হয়েছে
           const options = empList.map((emp, index) => ({
             option_number: index + 1,
             employee_id: emp.id,
@@ -184,7 +195,7 @@ export async function POST(request: NextRequest) {
     }
 
     // ==========================================
-    // ধাপ ২: কনফার্মেশন ফেজ (Phase: Confirm)
+    // "confirm" ফেজ (Phase: Confirm)
     // ==========================================
     if (phase === 'confirm') {
       if (!pending_action_id) {
@@ -317,9 +328,11 @@ export async function POST(request: NextRequest) {
       console.error('Failed to save error log:', logErr);
     }
 
+    // ডিবাগিং সহজ করার জন্য অরিজিনাল এরর টেক্সটটি রেসপন্সে পাঠানো হলো
     return NextResponse.json({
       success: false,
-      message: 'দুঃখিত, অভ্যন্তরীণ প্রসেসিং সমস্যার কারণে ডাটাবেজে সংরক্ষণ করা যায়নি।'
+      message: 'দুঃখিত, অভ্যন্তরীণ প্রসেসিং সমস্যার কারণে ডাটাবেজে সংরক্ষণ করা যায়নি।',
+      debug_error: err instanceof Error ? err.message : String(err)
     }, { status: 500 });
   }
 }
