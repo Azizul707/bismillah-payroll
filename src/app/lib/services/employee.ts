@@ -4,13 +4,13 @@ import { AuditService } from './audit';
 
 export class EmployeeService {
   /**
-   * নতুন কর্মচারী যুক্ত করা এবং ইউনিক এমপ্লয়ি কোড জেনারেট করা
+   * নতুন কর্মচারী যুক্ত করা (শাখা ছাড়া)
    */
   static async createEmployee(
     employee: {
       fullName: string;
       mobileNumber: string;
-      branchId: string;
+      branchId?: string | null; // শাখা ঐচ্ছিক করা হয়েছে
       categoryId: string;
       joiningDate: string;
       monthlySalary: number;
@@ -44,7 +44,7 @@ export class EmployeeService {
         employee_code: employeeCode,
         full_name: employee.fullName,
         mobile_number: employee.mobileNumber,
-        branch_id: employee.branchId,
+        branch_id: employee.branchId || null, // শাখা নাল পাঠানো হচ্ছে
         category_id: employee.categoryId,
         joining_date: employee.joiningDate,
         monthly_salary: employee.monthlySalary,
@@ -86,15 +86,16 @@ export class EmployeeService {
   }
 
   /**
-   * কর্মচারীর তথ্য আপডেট করা (বাধ্যতামূলক কারণ সহ)
+   * কর্মচারীর তথ্য আপডেট করা
    */
   static async updateEmployee(
     id: string,
     updates: {
       fullName?: string;
       mobileNumber?: string;
-      branchId?: string;
+      branchId?: string | null;
       categoryId?: string;
+      joiningDate?: string; // যোগদানের তারিখ পরিবর্তনের সুবিধা যুক্ত
       monthlySalary?: number;
       remarks?: string;
     },
@@ -102,7 +103,6 @@ export class EmployeeService {
     adminId: string,
     adminName: string
   ): Promise<Employee> {
-    // ১. আগের ডাটা রিড করা অডিটের জন্য
     const { data: oldData, error: getError } = await db.employees()
       .select('*')
       .eq('id', id)
@@ -110,17 +110,21 @@ export class EmployeeService {
 
     if (getError) throw getError;
 
-    // ২. আপডেট ডাটা প্রস্তুত করা
+    // ESLint-এর 'any' এরর দূর করতে 'unknown' টাইপ সেফ ডাইনামিক পে-লোড তৈরি করা হলো
+    const updatePayload: Record<string, unknown> = {
+      updated_at: new Date().toISOString(),
+    };
+
+    if (updates.fullName !== undefined) updatePayload.full_name = updates.fullName;
+    if (updates.mobileNumber !== undefined) updatePayload.mobile_number = updates.mobileNumber;
+    if (updates.branchId !== undefined) updatePayload.branch_id = updates.branchId || null;
+    if (updates.categoryId !== undefined) updatePayload.category_id = updates.categoryId;
+    if (updates.joiningDate !== undefined) updatePayload.joining_date = updates.joiningDate; // DB-তে যোগদানের তারিখ সেভ
+    if (updates.monthlySalary !== undefined) updatePayload.monthly_salary = updates.monthlySalary;
+    if (updates.remarks !== undefined) updatePayload.remarks = updates.remarks;
+
     const { data: newData, error: updateError } = await db.employees()
-      .update({
-        full_name: updates.fullName,
-        mobile_number: updates.mobileNumber,
-        branch_id: updates.branchId,
-        category_id: updates.categoryId,
-        monthly_salary: updates.monthlySalary,
-        remarks: updates.remarks,
-        updated_at: new Date().toISOString(),
-      })
+      .update(updatePayload)
       .eq('id', id)
       .select()
       .single();
@@ -129,7 +133,6 @@ export class EmployeeService {
 
     const updatedEmployee = newData as unknown as Employee;
 
-    // ৩. অডিট লগ সংরক্ষণ
     await AuditService.logChange({
       tableName: 'employees',
       recordId: id,
@@ -145,7 +148,7 @@ export class EmployeeService {
   }
 
   /**
-   * কর্মচারীকে সফট ডিলিট করা
+   * সফট ডিলিট
    */
   static async deleteEmployee(
     id: string,
@@ -179,13 +182,12 @@ export class EmployeeService {
   }
 
   /**
-   * সকল সক্রিয় কর্মচারীদের তালিকা দেখা (ব্রাঞ্চ ও ক্যাটাগরি নাম সহ)
+   * তালিকা রিড
    */
   static async getAllEmployees(): Promise<Employee[]> {
     const { data, error } = await db.employees()
       .select(`
         *,
-        branches(branch_name),
         categories(category_name)
       `)
       .eq('is_deleted', false)

@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { 
   Users, 
   Layers, 
@@ -23,7 +23,9 @@ interface SidebarItem {
 
 export function DashboardSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState<{ name: string; role: string } | null>(null);
 
   // সম্পূর্ণ বাংলায় মেনুসমূহ
   const menuItems: SidebarItem[] = [
@@ -35,16 +37,49 @@ export function DashboardSidebar() {
     { name: 'পরিবর্তন লগ (Audit)', path: '/dashboard/audit-logs', icon: History },
   ];
 
+  // লোকাল সেশন থেকে কারেন্ট ইউজারের নাম ও রোল লোড করা
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      await Promise.resolve();
+      if (active) {
+        const userStr = localStorage.getItem('bismillah_current_user');
+        if (userStr) {
+          try {
+            setCurrentUser(JSON.parse(userStr));
+          } catch (e) {
+            console.error('Error loading session user:', e);
+          }
+        }
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const toggleSidebar = () => setIsOpen(!isOpen);
+
+  // লগআউট হ্যান্ডলার লজিক (নিরাপদে সেশন ক্লিয়ার করে রিডাইরেক্ট করে)
+  const handleLogout = () => {
+    const confirmLogout = confirm('আপনি কি নিশ্চিত যে লগআউট করতে চান?');
+    if (!confirmLogout) return;
+
+    localStorage.removeItem('bismillah_current_user');
+    setIsOpen(false);
+    
+    // পুনরায় রুট লগইন পেজে পাঠিয়ে দেওয়া এবং ব্রাউজার সেশন ফ্রেশ করা
+    router.push('/');
+  };
 
   return (
     <>
       {/* মোবাইল হেডার (মোবাইল-ফার্স্ট ডিজাইন) */}
       <header className="flex h-16 items-center justify-between border-b bg-[#8B0000] px-4 text-white md:hidden">
-        <span className="text-xl font-bold tracking-wider">বিসমিল্লাহ</span>
+        <span className="text-xl font-bold tracking-wider">{"বিসমিল্লাহ"}</span>
         <button 
           onClick={toggleSidebar} 
-          className="rounded-md p-1 hover:bg-[#F4C430] hover:text-black focus:outline-none"
+          className="rounded-md p-1 hover:bg-[#F4C430] hover:text-black focus:outline-none cursor-pointer"
           aria-label="মেনু খুলুন"
         >
           {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -67,7 +102,7 @@ export function DashboardSidebar() {
       `}>
         {/* ডেক্সটপ লোগো এরিয়া */}
         <div className="hidden h-20 items-center justify-center border-b bg-[#8B0000] md:flex">
-          <h1 className="text-2xl font-black tracking-widest text-white">বিসমিল্লাহ</h1>
+          <h1 className="text-2xl font-black tracking-widest text-white">{"বিসমিল্লাহ"}</h1>
         </div>
 
         {/* নেভিগেশন লিংকসমূহ */}
@@ -95,17 +130,25 @@ export function DashboardSidebar() {
           })}
         </nav>
 
+        {/* প্রবেশকৃত ইউজারের প্রোফাইল ব্যাজ */}
+        {currentUser && (
+          <div className="mx-4 mb-2 p-3 rounded-lg bg-gray-50 border border-gray-100 flex flex-col gap-1 animate-in fade-in duration-200">
+            <span className="text-xs font-bold text-gray-400">{"প্রবেশকৃত ইউজার:"}</span>
+            <span className="text-sm font-black text-gray-900">{currentUser.name}</span>
+            <span className="inline-block text-[10px] font-black w-fit px-2.5 py-0.5 rounded-full bg-[#8B0000]/10 text-[#8B0000]">
+              {currentUser.role === 'owner' ? 'মালিক (Owner)' : 'ম্যানেজার (Manager)'}
+            </span>
+          </div>
+        )}
+
         {/* সাইডবার নিচে লগআউট বাটন */}
         <div className="border-t p-4">
           <button
-            onClick={() => {
-              // লগআউট লজিক এখানে সংযুক্ত করা হবে
-              alert('লগআউট করা হচ্ছে...');
-            }}
-            className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-base font-bold text-red-600 transition-colors hover:bg-red-50"
+            onClick={handleLogout}
+            className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-base font-bold text-red-600 transition-colors hover:bg-red-50 cursor-pointer"
           >
             <LogOut className="h-5 w-5" />
-            <span>লগআউট করুন</span>
+            <span>{"লগআউট করুন"}</span>
           </button>
         </div>
       </aside>

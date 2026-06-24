@@ -75,9 +75,10 @@ export async function POST(request: NextRequest) {
 
         if (empError) throw empError;
 
+        // টাইপ সেফ কাস্টিং এবং নাল রেফারেন্স প্রতিরোধ
         const empList = (matchedEmployees || []) as unknown as Array<Employee & { 
-          branches: { branch_name: string }; 
-          categories: { category_name: string }; 
+          branches: { branch_name: string } | null; 
+          categories: { category_name: string } | null; 
         }>;
 
         if (empList.length === 0) {
@@ -89,10 +90,11 @@ export async function POST(request: NextRequest) {
 
         // একাধিক মিল পাওয়া গেলে (Ambiguity Resolution)
         if (empList.length > 1) {
+          // শাখা নাল হতে পারে তা বিবেচনা করে নিরাপদ ঐচ্ছিক চেইনিং (Optional Chaining) ব্যবহার করা হয়েছে
           const options = empList.map((emp, index) => ({
             option_number: index + 1,
             employee_id: emp.id,
-            display_name: `${emp.full_name} (${emp.categories.category_name}, ${emp.branches.branch_name}, মোবাইল শেষ ৪ ডিজিট: ${emp.mobile_number.slice(-4)})`
+            display_name: `${emp.full_name} (${emp.categories?.category_name || 'কারিগর'}, ${emp.branches?.branch_name || 'প্রধান শাখা'}, মোবাইল শেষ ৪ ডিজিট: ${emp.mobile_number.slice(-4)})`
           }));
 
           return NextResponse.json({
@@ -160,6 +162,17 @@ export async function POST(request: NextRequest) {
 • মাসের হিসাব: ${parameters.month}-${parameters.year}-এর বেতন তৈরি করা হবে।
 
 সব ঠিক থাকলে "হ্যাঁ" লিখুন, না হলে "না" লিখুন।`;
+      } else if (action === 'lock_payroll') {
+        confirmationText = `আমি যা বুঝেছি:
+• অ্যাকশন: ${parameters.month}-${parameters.year}-এর বেতন বিবরণী লক করা হবে।
+
+সব ঠিক থাকলে "হ্যাঁ" লিখুন, না হলে "না" লিখুন।`;
+      } else if (action === 'unlock_payroll') {
+        confirmationText = `আমি যা বুঝেছি:
+• অ্যাকশন: ${parameters.month}-${parameters.year}-এর বেতন বিবরণী আনলক করা হবে।
+• কারণ: ${parameters.reason || 'ভুল সংশোধনের অনুরোধ'}
+
+সব ঠিক থাকলে "হ্যাঁ" লিখুন, না হলে "না" লিখুন।`;
       }
 
       return NextResponse.json({
@@ -198,15 +211,24 @@ export async function POST(request: NextRequest) {
       const draftParams = draftRecord.parameters as Record<string, unknown>;
       const targetEmpId = draftParams.employee_id as string | null;
 
+      // তারিখ থেকে বুদ্ধিমান উপায়ে মাস ও বছর আলাদা করা (যদি সরাসরি ইনপুট না থাকে)
+      const dateVal = (draftParams.date as string) || new Date().toLocaleDateString('en-GB').replace(/\//g, '-');
+      const dateParts = dateVal.split('-');
+      const fallbackMonth = dateParts.length === 3 ? dateParts[1] : '06';
+      const fallbackYear = dateParts.length === 3 ? dateParts[2] : '2026';
+
+      const finalMonth = (draftParams.month as string) || fallbackMonth;
+      const finalYear = (draftParams.year as string) || fallbackYear;
+
       // খ. অ্যাকশন টাইপ অনুযায়ী নির্দিষ্ট সার্ভিস কল করা
       if (action === 'add_advance') {
         if (!targetEmpId) throw new Error('Employee ID missing in confirm phase');
         await AdvanceService.addAdvance({
           employeeId: targetEmpId,
           amount: Number(draftParams.amount),
-          month: draftParams.month as string,
-          year: draftParams.year as string,
-          reason: draftParams.reason as string,
+          month: finalMonth,
+          year: finalYear,
+          reason: (draftParams.reason as string) || 'পারিবারিক প্রয়োজন',
           adminId,
           adminName
         });
@@ -230,11 +252,37 @@ export async function POST(request: NextRequest) {
         });
       } else if (action === 'generate_payroll') {
         await PayrollService.generateMonthlyPayroll(
-          draftParams.month as string,
-          draftParams.year as string,
+          finalMonth,
+          finalYear,
           adminId,
           adminName
         );
+      } else if (action === 'lock_payroll') {
+        // মাস ও বছরের ওপর ভিত্তি করে পে-রোল খুঁজে বের করে লক করা
+        const { data: pData, error: pErr } = await db.payrolls()
+          .select('id')
+          .eq('payroll_month', finalMonth)
+          .eq('payroll_year', finalYear)
+          .maybeSingle();
+
+        if (pErr) throw pErr;
+        if (!pData) {
+          return NextResponse.json({ success: false, message: `${finalMonth}-${finalYear} মাসের কোনো পে-রোল বিবরণী পাওয়া যায়নি যা লক করা সম্ভব।` });
+        }
+        await PayrollService.lockPayroll(pData.id, adminId, adminName);
+      } else if (action === 'unlock_payroll') {
+        // মাস ও বছরের ওপর ভিত্তি করে পে-রোল বিবরণী আনলক করা
+        const { data: pData, error: pErr } = await db.payrolls()
+          .select('id')
+          .eq('payroll_month', finalMonth)
+          .eq('payroll_year', finalYear)
+          .maybeSingle();
+
+        if (pErr) throw pErr;
+        if (!pData) {
+          return NextResponse.json({ success: false, message: `${finalMonth}-${finalYear} মাসের কোনো পে-রোল বিবরণী পাওয়া যায়নি যা আনলক করা সম্ভব।` });
+        }
+        await PayrollService.unlockPayroll(pData.id, (draftParams.reason as string) || 'এআই ম্যানেজার রিকোয়েস্ট আনলক', adminId, adminName);
       }
 
       // গ. পেন্ডিং স্ট্যাটাস আপডেট করে 'confirmed' করা
