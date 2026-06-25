@@ -1,7 +1,10 @@
-/* ১. আধুনিক Tailwind CSS v4 ইমপোর্ট */
+/* ১. গুগল ফন্ট 'Tiro Bangla' ইমপোর্ট (এটি অবশ্যই সবার উপরে হতে হবে) */
+@import url('https://fonts.googleapis.com/css2?family=Tiro+Bangla:ital@0;1&display=swap');
+
+/* ২. আধুনিক Tailwind CSS v4 ইমপোর্ট */
 @import "tailwindcss";
 
-/* ২. টেইলউইন্ড থিম কনফিগারেশন (বিসমিল্লাহ ব্র্যান্ড কালার্স) */
+/* ৩. টেইলউইন্ড থিম কনফিগারেশন (বিসমিল্লাহ ব্র্যান্ড কালার্স ও গ্লোবাল ফন্ট) */
 @theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -32,9 +35,12 @@
   --color-ring: var(--ring);
 
   --radius-lg: var(--radius);
+
+  /* Tailwind-এর ডিফল্ট sans-serif ফন্ট হিসেবে 'Tiro Bangla' সেট করা হলো */
+  --font-sans: 'Tiro Bangla', serif;
 }
 
-/* ৩. সিএসএস ভ্যারিয়েবল সেটআপ (রঙের সহজ হেক্স কোড) */
+/* ৪. সিএসএস ভ্যারিয়েবল সেটআপ (রঙের সহজ হেক্স কোড) */
 :root {
   --background: #ffffff;
   --foreground: #1a1a1a;
@@ -67,14 +73,26 @@
   --radius: 0.5rem;
 }
 
-/* ৪. গ্লোবাল রিসেট এবং বডি স্টাইলস */
+/* ৫. গ্লোবাল রিসেট এবং বডি স্টাইলস */
 @utility border-border {
   border-color: var(--border);
+}
+
+/* 
+  সম্পূর্ণ অ্যাপ্লিকেশন, সমস্ত ফর্ম ইনপুট, সিলেক্ট বক্স, ড্রপডাউন, 
+  টেক্সট এরিয়া এবং বোতামে গ্লোবালি 'Tiro Bangla' ফন্ট সক্রিয় করা হলো 
+*/
+html,
+body,
+input,
+select,
+textarea,
+button {
+  font-family: 'Tiro Bangla', serif !important;
 }
 
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   min-height: 100vh;
 }
