@@ -33,7 +33,7 @@ export function DashboardSidebar() {
     { name: 'কর্মচারী তালিকা', path: '/dashboard/employees', icon: Users },
     { name: 'ক্যাটাগরি সমূহ', path: '/dashboard/employees/categories', icon: Layers },
     { name: 'বেতন ও পে-রোল', path: '/dashboard/payroll', icon: CreditCard },
-    { name: 'মালিক রিপোর্ট', path: '/dashboard/reports', icon: FileText },
+    { name: 'মাসিক রিপোর্ট', path: '/dashboard/reports', icon: FileText },
     { name: 'পরিবর্তন লগ (Audit)', path: '/dashboard/audit-logs', icon: History },
   ];
 
@@ -136,7 +136,7 @@ export function DashboardSidebar() {
             <span className="text-xs font-bold text-gray-400">{"প্রবেশকৃত ইউজার:"}</span>
             <span className="text-sm font-black text-gray-900">{currentUser.name}</span>
             <span className="inline-block text-[10px] font-black w-fit px-2.5 py-0.5 rounded-full bg-[#8B0000]/10 text-[#8B0000]">
-              {currentUser.role === 'owner' ? 'মালিক (Owner)' : 'ম্যানেজার (Manager)'}
+              {currentUser.role === 'owner' ? '(Owner)' : '(Manager)'}
             </span>
           </div>
         )}
