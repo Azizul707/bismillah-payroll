@@ -139,7 +139,7 @@ export default function ReportsPage() {
       {/* স্ক্রিন হেডার (প্রিন্টে হাইড থাকবে) */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b pb-4 no-print">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-800">{"মালিক রিপোর্ট"}</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-800">{"মাসিক রিপোর্ট"}</h1>
           <p className="text-sm font-semibold text-gray-500 mt-1">{"ব্যবসায়িক খরচ ও মোট বেতনের মাসিক সংক্ষিপ্ত বিবরণ"}</p>
         </div>
         <button
@@ -214,7 +214,7 @@ export default function ReportsPage() {
             <Briefcase className="h-5.5 w-5.5" />
           </div>
           <div>
-            <p className="text-xs text-gray-400 font-semibold">{"মোট অগ্রিম বেতন সমন্বয়"}</p>
+            <p className="text-xs text-gray-400 font-semibold">{"মোট অগ্রিম বেতন সমন্বয়"}</p>
             <h3 className="text-lg font-bold text-gray-800 mt-0.5">{formatCurrency(totalAdvances)} {"টাকা"}</h3>
           </div>
         </div>
@@ -224,7 +224,7 @@ export default function ReportsPage() {
             <Users className="h-5.5 w-5.5" />
           </div>
           <div>
-            <p className="text-xs text-gray-400 font-semibold">{"পরিশোধকৃত মোট কর্মচারী"}</p>
+            <p className="text-xs text-gray-400 font-semibold">{"বেতন প্রাপ্য মোট কর্মচারী"}</p>
             <h3 className="text-lg font-bold text-gray-800 mt-0.5">{totalActiveEmployees} {"জন"}</h3>
           </div>
         </div>

@@ -18,56 +18,72 @@ Font.register({
   src: 'https://cdn.jsdelivr.net/gh/sh4hids/bangla-web-fonts@solaimanlipi/subset-SolaimanLipiNormal.ttf',
 });
 
-// ২. ৩-কলামের কমপ্যাক্ট ভাউচার স্টাইলশিট (উচ্চতা মাত্র ২৪০ পয়েন্ট যা ৩টি ভাউচার ১টি A4-এ প্রিন্ট উপযোগী)
+// কারেন্সি কমা সেপারেটর হেল্পার ফাংশন
+const formatCurrency = (amount: number | string) => {
+  const num = Number(amount);
+  return isNaN(num) ? '0' : num.toLocaleString('en-US');
+};
+
+// ২. স্ট্যান্ডার্ড A4 পেজের শীর্ষে ভাউচার স্থাপন ও বড় টেক্সট উপযোগী স্টাইলশিট
 const styles = StyleSheet.create({
   page: {
     fontFamily: 'SolaimanLipi',
-    padding: 12,
-    fontSize: 9,
+    padding: 18,
+    fontSize: 10,
     color: '#1a1a1a',
     backgroundColor: '#ffffff',
   },
+  // পাতার একদম ওপরে ভাউচারটিকে একটি বর্ডারড বক্সে সীমাবদ্ধ করা হলো
+  voucherContainer: {
+    borderWidth: 1.5,
+    borderColor: '#e5e7eb',
+    borderRadius: 8,
+    padding: 14,
+    backgroundColor: '#ffffff',
+    height: 275, // লেখা বড় করার পর স্পেস অ্যাডজাস্ট করতে উচ্চতা বাড়ানো হয়েছে
+  },
   headerContainer: {
-    borderBottomWidth: 1.5,
+    borderBottomWidth: 2,
     borderBottomColor: '#8B0000',
-    paddingBottom: 4,
-    marginBottom: 8,
+    paddingBottom: 6,
+    marginBottom: 10,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
   companyName: {
-    fontSize: 15,
+    fontSize: 20, // কোম্পানির নাম ১৫ থেকে ২০ করা হলো
     fontWeight: 'bold',
     color: '#8B0000',
   },
   slipTitle: {
-    fontSize: 10,
+    fontSize: 12, // টাইটেল ১০ থেকে ১২ করা হলো
+    fontWeight: 'bold',
     color: '#555555',
     textAlign: 'right',
   },
   gridThreeColumn: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    marginBottom: 10,
   },
   column: {
     width: '32%',
     borderWidth: 1,
     borderColor: '#e5e7eb',
-    borderRadius: 4,
-    padding: 6,
+    borderRadius: 6,
+    padding: 8,
     backgroundColor: '#fafafa',
   },
   columnTitle: {
-    fontSize: 9,
+    fontSize: 11, // কলাম টাইটেল ৯ থেকে ১১ করা হলো
     fontWeight: 'bold',
     color: '#ffffff',
     backgroundColor: '#8B0000',
-    paddingVertical: 2,
-    paddingHorizontal: 4,
-    marginBottom: 4,
-    borderRadius: 2,
+    paddingVertical: 4,
+    paddingHorizontal: 6,
+    marginBottom: 6,
+    borderRadius: 3,
     textAlign: 'center',
   },
   fieldRow: {
@@ -75,57 +91,69 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     borderBottomWidth: 0.5,
     borderBottomColor: '#e5e7eb',
-    paddingVertical: 3,
+    paddingVertical: 4,
   },
   fieldLabel: {
     color: '#555555',
-    fontSize: 8,
+    fontSize: 10, // লেবেল ৮ থেকে ১০ করা হলো
   },
   fieldValue: {
     fontWeight: 'bold',
-    fontSize: 8,
+    fontSize: 10, // ভ্যালু ৮ থেকে ১০ করা হলো
   },
   netSalaryRow: {
-    marginTop: 4,
-    padding: 4,
+    marginTop: 6,
+    padding: 6,
     backgroundColor: '#F4C430',
-    borderRadius: 2,
+    borderRadius: 4,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
   netSalaryLabel: {
-    fontSize: 8,
+    fontSize: 10,
     fontWeight: 'bold',
     color: '#000000',
   },
   netSalaryValue: {
-    fontSize: 10,
+    fontSize: 13, // নিট প্রদেয় বেতন ১০ থেকে ১৩ করা হলো
     fontWeight: 'bold',
     color: '#8B0000',
   },
   signatureRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 18,
+    marginTop: 22,
     paddingHorizontal: 20,
   },
   signatureLine: {
-    borderTopWidth: 0.75,
-    borderTopColor: '#000000',
+    borderTopWidth: 1,
+    borderTopColor: '#1a1a1a',
     width: '35%',
     textAlign: 'center',
-    paddingTop: 3,
-    fontSize: 8,
+    paddingTop: 4,
+    fontSize: 10,
+    fontWeight: 'bold',
   },
   footer: {
-    marginTop: 10,
+    marginTop: 12,
     borderTopWidth: 0.5,
     borderTopColor: '#e5e7eb',
-    paddingTop: 4,
+    paddingTop: 6,
     textAlign: 'center',
-    fontSize: 7,
-    color: '#888888',
+    fontSize: 8.5,
+    color: '#777777',
+  },
+  // কাঁচি চিহ্নের কাটিং লাইনের ডিজাইন
+  cutLineContainer: {
+    marginTop: 25,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cutLineText: {
+    fontSize: 9,
+    color: '#9ca3af',
+    letterSpacing: 2,
   }
 });
 
@@ -148,93 +176,102 @@ interface SalarySlipProps {
   };
 }
 
-// ৩. রিঅ্যাক্ট-পিডিএফ কমপ্যাক্ট ডকুমেন্ট ভাউচার
+// ৩. রিঅ্যাক্ট-পিডিএফ কমপ্যাক্ট ডকুমেন্ট ভাউচার (A4 পেজের শীর্ষে সেট করা)
 const SalarySlipDocument = ({ data }: SalarySlipProps) => (
   <Document>
-    {/* Page Size: Width A4 (595.28pt), Height Compact Voucher (240pt) */}
-    <Page size={[595.28, 240]} style={styles.page}>
-      {/* হেডার */}
-      <View style={styles.headerContainer}>
-        <Text style={styles.companyName}>{"বিসমিল্লাহ"}</Text>
-        <Text style={styles.slipTitle}>{"বেতন পরিশোধের রসিদ (ভাউচার)"}</Text>
-      </View>
+    {/* Page Size: Standard A4 [595.28 x 841.89] */}
+    <Page size="A4" style={styles.page}>
+      <View style={styles.voucherContainer}>
+        {/* হেডার */}
+        <View style={styles.headerContainer}>
+          <Text style={styles.companyName}>{"বিসমিল্লাহ"}</Text>
+          <Text style={styles.slipTitle}>{"বেতন পরিশোধের রসিদ (ভাউচার)"}</Text>
+        </View>
 
-      {/* ৩-কলাম গ্রিড লেআউট */}
-      <View style={styles.gridThreeColumn}>
-        {/* কলাম ১: কর্মচারীর বিবরণ */}
-        <View style={styles.column}>
-          <Text style={styles.columnTitle}>{"কর্মচারির বিবরণ"}</Text>
-          <View style={styles.fieldRow}>
-            <Text style={styles.fieldLabel}>{"কোড:"}</Text>
-            <Text style={styles.fieldValue}>{data.employeeCode}</Text>
+        {/* ৩-কলাম গ্রিড লেআউট */}
+        <View style={styles.gridThreeColumn}>
+          {/* কলাম ১: কর্মচারীর বিবরণ */}
+          <View style={styles.column}>
+            <Text style={styles.columnTitle}>{"কর্মচারির বিবরণ"}</Text>
+            <View style={styles.fieldRow}>
+              <Text style={styles.fieldLabel}>{"কোড:"}</Text>
+              <Text style={styles.fieldValue}>{data.employeeCode}</Text>
+            </View>
+            <View style={styles.fieldRow}>
+              <Text style={styles.fieldLabel}>{"নাম:"}</Text>
+              <Text style={styles.fieldValue}>{data.employeeName}</Text>
+            </View>
+            <View style={styles.fieldRow}>
+              <Text style={styles.fieldLabel}>{"শাখা:"}</Text>
+              <Text style={styles.fieldValue}>{data.branchName || "N/A"}</Text>
+            </View>
+            <View style={styles.fieldRow}>
+              <Text style={styles.fieldLabel}>{"ক্যাটাগরি:"}</Text>
+              <Text style={styles.fieldValue}>{data.categoryName}</Text>
+            </View>
           </View>
-          <View style={styles.fieldRow}>
-            <Text style={styles.fieldLabel}>{"নাম:"}</Text>
-            <Text style={styles.fieldValue}>{data.employeeName}</Text>
+
+          {/* কলাম ২: হাজিরা বিবরণী */}
+          <View style={styles.column}>
+            <Text style={styles.columnTitle}>{"হাজিরা বিবরণী"}</Text>
+            <View style={styles.fieldRow}>
+              <Text style={styles.fieldLabel}>{"বেতন মাস:"}</Text>
+              <Text style={styles.fieldValue}>{`${data.month}-${data.year}`}</Text>
+            </View>
+            <View style={styles.fieldRow}>
+              <Text style={styles.fieldLabel}>{"উপস্থিত দিন:"}</Text>
+              <Text style={styles.fieldValue}>{`${data.dutyDays} দিন`}</Text>
+            </View>
+            <View style={styles.fieldRow}>
+              <Text style={styles.fieldLabel}>{"অনুপস্থিত দিন:"}</Text>
+              <Text style={styles.fieldValue}>{`${data.absentDays} দিন`}</Text>
+            </View>
+            <View style={styles.fieldRow}>
+              <Text style={styles.fieldLabel}>{"বোনাস দিন:"}</Text>
+              <Text style={styles.fieldValue}>{`+${data.bonusDays} দিন`}</Text>
+            </View>
           </View>
-          <View style={styles.fieldRow}>
-            <Text style={styles.fieldLabel}>{"শাখা:"}</Text>
-            <Text style={styles.fieldValue}>{data.branchName || "N/A"}</Text>
-          </View>
-          <View style={styles.fieldRow}>
-            <Text style={styles.fieldLabel}>{"ক্যাটাগরি:"}</Text>
-            <Text style={styles.fieldValue}>{data.categoryName}</Text>
+
+          {/* কলাম ৩: বেতন ও সমন্বয় */}
+          <View style={styles.column}>
+            <Text style={styles.columnTitle}>{"বেতন ও সমন্বয়"}</Text>
+            <View style={styles.fieldRow}>
+              <Text style={styles.fieldLabel}>{"মূল বেতন:"}</Text>
+              <Text style={styles.fieldValue}>{`${formatCurrency(data.monthlySalary)} টাকা`}</Text>
+            </View>
+            <View style={styles.fieldRow}>
+              <Text style={styles.fieldLabel}>{"প্রাপ্য বেতন:"}</Text>
+              <Text style={styles.fieldValue}>{`${formatCurrency(data.grossSalary)} টাকা`}</Text>
+            </View>
+            <View style={styles.fieldRow}>
+              <Text style={styles.fieldLabel}>{"অগ্রিম (-):"}</Text>
+              <Text style={styles.fieldValue}>{`-${formatCurrency(data.advanceAmount)} টাকা`}</Text>
+            </View>
+            <View style={styles.netSalaryRow}>
+              <Text style={styles.netSalaryLabel}>{"নিট বেতন:"}</Text>
+              <Text style={styles.netSalaryValue}>{`${formatCurrency(data.netSalary)} টাকা`}</Text>
+            </View>
           </View>
         </View>
 
-        {/* কলাম ২: হাজিরা বিবরণী */}
-        <View style={styles.column}>
-          <Text style={styles.columnTitle}>{"হাজিরা বিবরণী"}</Text>
-          <View style={styles.fieldRow}>
-            <Text style={styles.fieldLabel}>{"বেতন মাস:"}</Text>
-            <Text style={styles.fieldValue}>{`${data.month}-${data.year}`}</Text>
-          </View>
-          <View style={styles.fieldRow}>
-            <Text style={styles.fieldLabel}>{"উপস্থিত দিন:"}</Text>
-            <Text style={styles.fieldValue}>{`${data.dutyDays} দিন`}</Text>
-          </View>
-          <View style={styles.fieldRow}>
-            <Text style={styles.fieldLabel}>{"অনুপস্থিত দিন:"}</Text>
-            <Text style={styles.fieldValue}>{`${data.absentDays} দিন`}</Text>
-          </View>
-          <View style={styles.fieldRow}>
-            <Text style={styles.fieldLabel}>{"বোনাস দিন:"}</Text>
-            <Text style={styles.fieldValue}>{`+${data.bonusDays} দিন`}</Text>
-          </View>
+        {/* স্বাক্ষর লাইন */}
+        <View style={styles.signatureRow}>
+          <Text style={styles.signatureLine}>{"কর্মচারীর স্বাক্ষর"}</Text>
+          <Text style={styles.signatureLine}>{"কর্তৃপক্ষের স্বাক্ষর"}</Text>
         </View>
 
-        {/* কলাম ৩: বেতন ও সমন্বয় */}
-        <View style={styles.column}>
-          <Text style={styles.columnTitle}>{"বেতন ও সমন্বয়"}</Text>
-          <View style={styles.fieldRow}>
-            <Text style={styles.fieldLabel}>{"মূল বেতন:"}</Text>
-            <Text style={styles.fieldValue}>{`${data.monthlySalary} টাকা`}</Text>
-          </View>
-          <View style={styles.fieldRow}>
-            <Text style={styles.fieldLabel}>{"প্রাপ্য বেতন:"}</Text>
-            <Text style={styles.fieldValue}>{`${data.grossSalary} টাকা`}</Text>
-          </View>
-          <View style={styles.fieldRow}>
-            <Text style={styles.fieldLabel}>{"অগ্রিম (-):"}</Text>
-            <Text style={styles.fieldValue}>{`-${data.advanceAmount} টাকা`}</Text>
-          </View>
-          <View style={styles.netSalaryRow}>
-            <Text style={styles.netSalaryLabel}>{"নিট বেতন:"}</Text>
-            <Text style={styles.netSalaryValue}>{`${data.netSalary} টাকা`}</Text>
-          </View>
+        {/* ফুটার */}
+        <View style={styles.footer}>
+          <Text>{"* এই স্লিপটি বিসমিল্লাহ প্রতিষ্ঠানের অভ্যন্তরীণ ব্যবহারের জন্য তৈরি।"}</Text>
+          <Text>{"মুদ্রণের তারিখ: 24-06-2026"}</Text>
         </View>
       </View>
 
-      {/* স্বাক্ষর লাইন */}
-      <View style={styles.signatureRow}>
-        <Text style={styles.signatureLine}>{"কর্মচারীর স্বাক্ষর"}</Text>
-        <Text style={styles.signatureLine}>{"কর্তৃপক্ষের স্বাক্ষর"}</Text>
-      </View>
-
-      {/* ফুটার */}
-      <View style={styles.footer}>
-        <Text>{"* এই স্লিপটি বিসমিল্লাহ প্রতিষ্ঠানের অভ্যন্তরীণ ব্যবহারের জন্য তৈরি।"}</Text>
-        <Text>{"মুদ্রণের তারিখ: 24-06-2026"}</Text>
+      {/* কাটিং কাঁচি ডটেড লাইন */}
+      <View style={styles.cutLineContainer}>
+        <Text style={styles.cutLineText}>
+          {"✂ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"}
+        </Text>
       </View>
     </Page>
   </Document>
@@ -301,19 +338,68 @@ export function SalarySlipDownloadButton({ data }: SalarySlipProps) {
               </button>
             </div>
 
-            {/* পিডিএফ আইফ্রেম প্রিভিউ */}
-            <div className="relative bg-gray-50 rounded-lg border overflow-hidden h-[240px] md:h-[280px]">
-              {instance.url ? (
-                <iframe 
-                  src={`${instance.url}#toolbar=0&navpanes=0`} 
-                  className="w-full h-full border-0"
-                  title="Salary Slip Preview"
-                />
-              ) : (
-                <div className="flex items-center justify-center h-full text-sm font-bold text-gray-500">
-                  {"পিডিএফ প্রিভিউ লোড হচ্ছে..."}
+            {/* মোবাইল ফ্রেন্ডলি ও রেসপন্সিভ রিঅ্যাক্ট এইচটিএমএল প্রিভিউ */}
+            <div className="bg-gray-50 rounded-lg border p-4 shadow-inner overflow-x-auto max-w-full font-sans select-none">
+              <div className="min-w-[640px] border border-gray-200 rounded-xl p-4 bg-white relative space-y-4 shadow-sm">
+                
+                {/* প্রিভিউ হেডার */}
+                <div className="flex justify-between items-center border-b-2 border-[#8B0000] pb-2">
+                  <span className="text-xl font-bold text-[#8B0000]">{"বিসমিল্লাহ"}</span>
+                  <span className="text-sm font-bold text-gray-500">{"বেতন পরিশোধের রসিদ (ভাউচার)"}</span>
                 </div>
-              )}
+
+                {/* ৩-কলাম গ্রিড লেআউট */}
+                <div className="grid grid-cols-3 gap-3 text-xs">
+                  {/* কলাম ১: কর্মচারীর বিবরণ */}
+                  <div className="border border-gray-150 rounded-lg p-3 bg-gray-50">
+                    <div className="bg-[#8B0000] text-white py-1.5 text-center font-bold rounded-md mb-2">{"কর্মচারির বিবরণ"}</div>
+                    <div className="space-y-1 font-semibold text-gray-700">
+                      <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"কোড:"}</span><span className="font-bold">{data.employeeCode}</span></div>
+                      <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"নাম:"}</span><span className="font-bold">{data.employeeName}</span></div>
+                      <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"শাখা:"}</span><span className="font-bold">{data.branchName || "N/A"}</span></div>
+                      <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"ক্যাটাগরি:"}</span><span className="font-bold">{data.categoryName}</span></div>
+                    </div>
+                  </div>
+
+                  {/* কলাম ২: হাজিরা বিবরণী */}
+                  <div className="border border-gray-150 rounded-lg p-3 bg-gray-50">
+                    <div className="bg-[#8B0000] text-white py-1.5 text-center font-bold rounded-md mb-2">{"হাজিরা বিবরণী"}</div>
+                    <div className="space-y-1 font-semibold text-gray-700">
+                      <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"বেতন মাস:"}</span><span className="font-bold">{`${data.month}-${data.year}`}</span></div>
+                      <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"উপস্থিত দিন:"}</span><span className="font-bold">{`${data.dutyDays} দিন`}</span></div>
+                      <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"অনুপস্থিত দিন:"}</span><span className="font-bold">{`${data.absentDays} দিন`}</span></div>
+                      <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"বোনাস দিন:"}</span><span className="font-bold">{`+${data.bonusDays} দিন`}</span></div>
+                    </div>
+                  </div>
+
+                  {/* কলাম ৩: বেতন ও সমন্বয় */}
+                  <div className="border border-gray-150 rounded-lg p-3 bg-gray-50">
+                    <div className="bg-[#8B0000] text-white py-1.5 text-center font-bold rounded-md mb-2">{"বেতন ও সমন্বয়"}</div>
+                    <div className="space-y-1 font-semibold text-gray-700">
+                      <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"মূল বেতন:"}</span><span className="font-bold">{formatCurrency(data.monthlySalary)} {"টাকা"}</span></div>
+                      <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"প্রাপ্য বেতন:"}</span><span className="font-bold">{formatCurrency(data.grossSalary)} {"টাকা"}</span></div>
+                      <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"অগ্রিম (-):"}</span><span className="font-bold">-{formatCurrency(data.advanceAmount)} {"টাকা"}</span></div>
+                      <div className="bg-[#F4C430] text-black font-bold p-1.5 rounded-md flex justify-between mt-2">
+                        <span>{"নিট বেতন:"}</span>
+                        <span className="text-[#8B0000]">{formatCurrency(data.netSalary)} {"টাকা"}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* স্বাক্ষর লাইন */}
+                <div className="flex justify-between pt-6 px-6 text-xs text-center font-bold">
+                  <div className="w-[35%] border-t border-black pt-1">{"কর্মচারীর স্বাক্ষর"}</div>
+                  <div className="w-[35%] border-t border-black pt-1">{"কর্তৃপক্ষের স্বাক্ষর"}</div>
+                </div>
+
+                {/* ফুটার */}
+                <div className="text-[10px] text-gray-400 text-center border-t border-gray-100 pt-2 font-semibold">
+                  <p>{"* এই স্লিপটি বিসমিল্লাহ প্রতিষ্ঠানের অভ্যন্তরীণ ব্যবহারের জন্য তৈরি।"}</p>
+                  <p>{"মুদ্রণের তারিখ: 24-06-2026"}</p>
+                </div>
+
+              </div>
             </div>
 
             {/* অ্যাকশন বাটনসমূহ */}
