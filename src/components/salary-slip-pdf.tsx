@@ -406,7 +406,7 @@ export function SalarySlipDownloadButton({ data }: SalarySlipProps) {
 
                 {/* স্বাক্ষর লাইন */}
                 <div className="flex justify-between pt-6 px-6 text-xs text-center font-bold">
-                  <div className="w-[35%] border-t border-black pt-1">{"कर्मचारীর স্বাক্ষর"}</div>
+                  <div className="w-[35%] border-t border-black pt-1">{"কর্মচারীর স্বাক্ষর"}</div>
                   <div className="w-[35%] border-t border-black pt-1">{"কর্তৃপক্ষের স্বাক্ষর"}</div>
                 </div>
 
