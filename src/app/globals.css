@@ -1,15 +1,18 @@
-/* ১. ইংলিশ সংখ্যার জন্য ক্লিন সান্স-সেটিফ ফন্ট ম্যাপ করা (টিরো বাংলা ফন্টের ওপর ওভাররাইড) */
+/* 
+  ১. গুগল ফন্ট 'Tiro Bangla' ইমপোর্ট 
+  (সিএসএস নিয়ম অনুযায়ী এটি অবশ্যই ফাইলের একদম প্রথম লাইনে হতে হবে, অন্যথায় ব্রাউজার এটি রিজেক্ট করবে) 
+*/
+@import url('https://fonts.googleapis.com/css2?family=Tiro+Bangla:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+
+/* ২. আধুনিক Tailwind CSS v4 ইমপোর্ট */
+@import "tailwindcss";
+
+/* ৩. ইংলিশ সংখ্যার জন্য ক্লিন সান্স-সেটিফ ফন্ট ম্যাপ করা (টিরো বাংলা ফন্টের ওপর ওভাররাইড) */
 @font-face {
   font-family: 'Tiro Bangla';
   src: local('Segoe UI'), local('Arial'), local('Helvetica'), local('sans-serif');
   unicode-range: U+0030-0039; /* শুধুমাত্র ইংরেজি সংখ্যা ০ থেকে ৯ */
 }
-
-/* ২. গুগল ফন্ট 'Tiro Bangla' ইমপোর্ট (সবার উপরে হতে হবে) */
-@import url('https://fonts.googleapis.com/css2?family=Tiro+Bangla:ital@0;1&display=swap');
-
-/* ৩. আধুনিক Tailwind CSS v4 ইমপোর্ট */
-@import "tailwindcss";
 
 /* ৪. টেইলউইন্ড থিম কনফিগারেশন (বিসমিল্লাহ ব্র্যান্ড কালার্স ও গ্লোবাল ফন্ট) */
 @theme {
