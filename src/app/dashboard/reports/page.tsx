@@ -127,27 +127,7 @@ export default function ReportsPage() {
 
   return (
     <div className="space-y-6 font-normal antialiased">
-      {/* গুগোল ফন্ট 'Tiro Bangla' ইন্টিগ্রেশন এবং বিল্ড-সেফ কাস্টম স্টাইল শীট */}
-      <style dangerouslySetInnerHTML={{ __html: `
-        @import url('https://fonts.googleapis.com/css2?family=Tiro+Bangla:ital@0;1&display=swap');
-        body {
-          font-family: 'Tiro Bangla', serif !important;
-        }
-        @media print {
-          body {
-            background: white !important;
-            color: black !important;
-          }
-          /* প্রিন্ট মোডে সাইডবার, বাটন ও ফিল্টার লুকিয়ে রাখা */
-          .no-print {
-            display: none !important;
-          }
-          .print-only {
-            display: block !important;
-          }
-        }
-      `}} />
-
+     
       {/* প্রিন্ট পিডিএফ এর জন্য এক্সক্লুসিভ হেডার (সাধারণ স্ক্রিনে লুকানো থাকবে) */}
       <div className="hidden print-only text-center border-b pb-4 mb-6">
         <h1 className="text-3xl font-bold text-gray-900">{"মাসিক বেতন রিপোর্ট"}</h1>
