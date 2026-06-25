@@ -1,10 +1,17 @@
-/* ১. গুগল ফন্ট 'Tiro Bangla' ইমপোর্ট (এটি অবশ্যই সবার উপরে হতে হবে) */
+/* ১. ইংলিশ সংখ্যার জন্য ক্লিন সান্স-সেটিফ ফন্ট ম্যাপ করা (টিরো বাংলা ফন্টের ওপর ওভাররাইড) */
+@font-face {
+  font-family: 'Tiro Bangla';
+  src: local('Segoe UI'), local('Arial'), local('Helvetica'), local('sans-serif');
+  unicode-range: U+0030-0039; /* শুধুমাত্র ইংরেজি সংখ্যা ০ থেকে ৯ */
+}
+
+/* ২. গুগল ফন্ট 'Tiro Bangla' ইমপোর্ট (সবার উপরে হতে হবে) */
 @import url('https://fonts.googleapis.com/css2?family=Tiro+Bangla:ital@0;1&display=swap');
 
-/* ২. আধুনিক Tailwind CSS v4 ইমপোর্ট */
+/* ৩. আধুনিক Tailwind CSS v4 ইমপোর্ট */
 @import "tailwindcss";
 
-/* ৩. টেইলউইন্ড থিম কনফিগারেশন (বিসমিল্লাহ ব্র্যান্ড কালার্স ও গ্লোবাল ফন্ট) */
+/* ৪. টেইলউইন্ড থিম কনফিগারেশন (বিসমিল্লাহ ব্র্যান্ড কালার্স ও গ্লোবাল ফন্ট) */
 @theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -40,7 +47,7 @@
   --font-sans: 'Tiro Bangla', serif;
 }
 
-/* ৪. সিএসএস ভ্যারিয়েবল সেটআপ (রঙের সহজ হেক্স কোড) */
+/* ৫. সিএসএস ভ্যারিয়েবল সেটআপ (রঙের সহজ হেক্স কোড) */
 :root {
   --background: #ffffff;
   --foreground: #1a1a1a;
@@ -73,7 +80,7 @@
   --radius: 0.5rem;
 }
 
-/* ৫. গ্লোবাল রিসেট এবং বডি স্টাইলস */
+/* ৬. গ্লোবাল রিসেট এবং বডি স্টাইলস */
 @utility border-border {
   border-color: var(--border);
 }

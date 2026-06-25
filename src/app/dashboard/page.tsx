@@ -47,6 +47,12 @@ function formatDate(dateStr: string) {
 }
 
 export default function DashboardPage() {
+  // ডাইনামিক তারিখ, মাস এবং বছরের স্টেটসমূহ (Hydration সেফ ফলব্যাক সহ)
+  const [currentMonth, setCurrentMonth] = useState('06');
+  const [currentYear, setCurrentYear] = useState('2026');
+  const [formattedToday, setFormattedToday] = useState('24-06-2026');
+  const [monthName, setMonthName] = useState('জুন');
+
   const [stats, setStats] = useState<DashboardStats>({
     totalEmployees: 0,
     activeEmployees: 0,
@@ -58,11 +64,13 @@ export default function DashboardPage() {
   const [leaveList, setLeaveList] = useState<LeaveEmployeeInfo[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // জুন ২০২৬ সালের হিসাব অনুযায়ী ডিফল্ট ডেটা লোড
-  const currentMonth = '06';
-  const currentYear = '2026';
+  // কারেন্সি কমা সেপারেটর ফরম্যাটার
+  const formatCurrency = (amount: number | string) => {
+    const num = Number(amount);
+    return isNaN(num) ? '0' : num.toLocaleString('en-US');
+  };
 
-  // ড্যাশবোর্ডের ডেটা লোড করার নিরাপদ মেমোইজড ফাংশন (Next.js 15 এডিটর ও ESLint কমপ্লায়েন্ট)
+  // ড্যাশবোর্ডের ডেটা লোড করার নিরাপদ মেমোইজড ফাংশন
   const loadDashboardData = useCallback(async () => {
     await Promise.resolve(); // সিনক্রোনাস রেন্ডার এরর দূর করতে মাইক্রো-টাস্ক টিক
     try {
@@ -78,7 +86,7 @@ export default function DashboardPage() {
       const activeEmp = employees?.filter(e => e.status === 'active').length || 0;
       const leaveEmp = employees?.filter(e => e.status === 'leave').length || 0;
 
-      // ২. চলতি মাসের মোট অগ্রিম (জুন ২০২৬)
+      // ২. চলতি মাসের মোট অগ্রিম (ডাইনামিক মাস ও বছরের ওপর ভিত্তি করে)
       const { data: advances, error: advError } = await db.salary_advances()
         .select('amount')
         .eq('advance_month', currentMonth)
@@ -117,19 +125,17 @@ export default function DashboardPage() {
 
       if (leaveErr) throw leaveErr;
 
-      // সুপাবেস রেসপন্সকে টাইপ কাস্টিং করা যাতে loop-এর ভেতরে automatic type inference কাজ করে
       const typedLeaveData = leaveEmployeesData as unknown as SupabaseLeaveEmployee[];
 
-      // ছুটির সময়কাল ডাইনামিকভাবে হিসাব করা (আজকের তারিখ ২৪-০৬-২০২৬ অনুযায়ী)
+      // ছুটির সময়কাল ডাইনামিকভাবে আজকের আসল তারিখ অনুযায়ী হিসাব করা
       const parsedLeaves: LeaveEmployeeInfo[] = (typedLeaveData || []).map((emp) => {
-        // কর্মচারীর সর্বশেষ ছুটির রেকর্ডটি চিহ্নিত করা (কোনো any ব্যবহার না করেই)
         const leaveHistory = (emp.employee_status_history || [])
           .filter((h) => h.status === 'leave')
           .sort((a, b) => new Date(b.start_date).getTime() - new Date(a.start_date).getTime());
         
-        const startDate = leaveHistory[0]?.start_date || '2026-06-24'; // রেকর্ড না থাকলে ফলব্যাক আজকের তারিখ
+        const startDate = leaveHistory[0]?.start_date || new Date().toISOString().split('T')[0];
         
-        const today = new Date('2026-06-24');
+        const today = new Date();
         const startDateObj = new Date(startDate);
         const diffTime = today.getTime() - startDateObj.getTime();
         const daysCount = Math.floor(diffTime / (1000 * 60 * 60 * 24));
@@ -153,7 +159,34 @@ export default function DashboardPage() {
     }
   }, [currentMonth, currentYear]);
 
-  // মাউন্ট এবং আপডেটের পর ডাটা ফেচিং নিশ্চিতকরণ
+  // আজকের রিয়েল তারিখ ও মাস ডাইনামিক সেটআপ (Next.js 15-এর কড়া Rule #1 মেনে মাইক্রো-টাস্ক ডিফারেল সহ)
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      await Promise.resolve(); // 🌟 রেন্ডার ক্যাস্কেডিং ও বিল্ড ফেল প্রতিরোধক মাইক্রো-টাস্ক টিক
+      if (active) {
+        const now = new Date();
+        const d = String(now.getDate()).padStart(2, '0');
+        const m = String(now.getMonth() + 1).padStart(2, '0');
+        const y = String(now.getFullYear());
+        
+        const monthsList = [
+          'জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 
+          'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'
+        ];
+        
+        setFormattedToday(`${d}-${m}-${y}`);
+        setCurrentMonth(m);
+        setCurrentYear(y);
+        setMonthName(monthsList[now.getMonth()]);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // ডাইনামিক তারিখের পর ডেটা লোড নিশ্চিতকরণ
   useEffect(() => {
     let active = true;
     (async () => {
@@ -178,12 +211,12 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 font-normal">
       {/* হেডার সেকশন */}
       <div className="border-b pb-4">
-        <h1 className="text-2xl md:text-3xl font-black text-gray-900">{"স্বাগতম, বিসমিল্লাহ ড্যাশবোর্ড"}</h1>
-        <p className="text-sm md:text-base font-bold text-gray-500 mt-1">
-          {"আজকের তারিখ: 24-06-2026 | চলতি মাসের হিসাব (জুন 2026)"}
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-800">{"স্বাগতম, বিসমিল্লাহ ড্যাশবোর্ড"}</h1>
+        <p className="text-sm md:text-base font-semibold text-gray-500 mt-1">
+          {"আজকের তারিখ: "}{formattedToday}{" | চলতি মাসের হিসাব ("}{monthName}{" "}{currentYear}{")"}
         </p>
       </div>
 
@@ -196,8 +229,8 @@ export default function DashboardPage() {
             <Users className="h-8 w-8" />
           </div>
           <div>
-            <p className="text-base font-bold text-gray-500">{"মোট কর্মচারী"}</p>
-            <h3 className="text-3xl font-black text-gray-900 mt-1">{stats.totalEmployees} {"জন"}</h3>
+            <p className="text-base font-semibold text-gray-500">{"মোট কর্মচারী"}</p>
+            <h3 className="text-2xl font-bold text-gray-850 mt-1">{stats.totalEmployees} {"জন"}</h3>
           </div>
         </div>
 
@@ -207,8 +240,8 @@ export default function DashboardPage() {
             <CheckCircle className="h-8 w-8" />
           </div>
           <div>
-            <p className="text-base font-bold text-gray-500">{"বর্তমানে কর্মরত"}</p>
-            <h3 className="text-3xl font-black text-green-700 mt-1">{stats.activeEmployees} {"জন"}</h3>
+            <p className="text-base font-semibold text-gray-500">{"বর্তমানে কর্মরত"}</p>
+            <h3 className="text-2xl font-bold text-green-700 mt-1">{stats.activeEmployees} {"জন"}</h3>
           </div>
         </div>
 
@@ -218,8 +251,8 @@ export default function DashboardPage() {
             <CalendarX className="h-8 w-8" />
           </div>
           <div>
-            <p className="text-base font-bold text-gray-500">{"বর্তমানে ছুটিতে"}</p>
-            <h3 className="text-3xl font-black text-amber-700 mt-1">{stats.leaveEmployees} {"জন"}</h3>
+            <p className="text-base font-semibold text-gray-500">{"বর্তমানে ছুটিতে"}</p>
+            <h3 className="text-2xl font-bold text-amber-700 mt-1">{stats.leaveEmployees} {"জন"}</h3>
           </div>
         </div>
 
@@ -229,8 +262,8 @@ export default function DashboardPage() {
             <DollarSign className="h-8 w-8" />
           </div>
           <div>
-            <p className="text-base font-bold text-amber-900">{"চলতি মাসের মোট অগ্রিম"}</p>
-            <h3 className="text-3xl font-black text-amber-950 mt-1">{stats.totalAdvancesThisMonth} {"টাকা"}</h3>
+            <p className="text-base font-semibold text-amber-900">{"চলতি মাসের মোট অগ্রিম"}</p>
+            <h3 className="text-2xl font-bold text-amber-950 mt-1">{formatCurrency(stats.totalAdvancesThisMonth)} {"টাকা"}</h3>
           </div>
         </div>
 
@@ -240,21 +273,21 @@ export default function DashboardPage() {
             <DollarSign className="h-8 w-8" />
           </div>
           <div>
-            <p className="text-base font-bold text-[#8B0000]">{"চলতি মাসের মূল বেতন বাজেট"}</p>
-            <h3 className="text-3xl font-black text-[#8B0000] mt-1">{stats.estimatedSalaryThisMonth} {"টাকা"}</h3>
+            <p className="text-base font-semibold text-[#8B0000]">{"চলতি মাসের মূল বেতন বাজেট"}</p>
+            <h3 className="text-2xl font-bold text-[#8B0000] mt-1">{formatCurrency(stats.estimatedSalaryThisMonth)} {"টাকা"}</h3>
           </div>
         </div>
 
       </div>
 
-      {/* নতুন ছুটির তালিকা টেবিল সেকশন */}
+      {/* ছুটিতে থাকা কর্মচারীদের তালিকা টেবিল সেকশন */}
       <div className="rounded-xl border border-gray-100 bg-white shadow-sm overflow-hidden">
         <div className="border-b bg-gray-50/50 px-6 py-4">
-          <h3 className="text-lg font-black text-gray-900 flex items-center gap-2">
+          <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
             <CalendarX className="h-5 w-5 text-[#8B0000]" />
             <span>{"বর্তমানে ছুটিতে থাকা কর্মচারীদের তালিকা"}</span>
           </h3>
-          <p className="text-xs font-bold text-gray-500 mt-0.5">{"বর্তমানে কারখানায় অনুপস্থিত ও ছুটিতে থাকা সকল কর্মচারীদের বিবরণ"}</p>
+          <p className="text-xs font-semibold text-gray-500 mt-0.5">{"বর্তমানে কারখানায় অনুপস্থিত ও ছুটিতে থাকা সকল কর্মচারীদের বিবরণ"}</p>
         </div>
 
         {leaveList.length === 0 ? (
@@ -264,26 +297,26 @@ export default function DashboardPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-left text-base font-bold text-gray-800">
+            <table className="w-full border-collapse text-left text-sm font-semibold text-gray-800">
               <thead>
-                <tr className="border-b bg-gray-50/75 text-sm font-black text-gray-700">
+                <tr className="border-b bg-gray-50/75 text-xs font-bold text-gray-600">
                   <th className="p-4">{"কর্মচারীর নাম"}</th>
                   <th className="p-4">{"ক্যাটাগরি"}</th>
                   <th className="p-4">{"ছুটি শুরুর তারিখ"}</th>
                   <th className="p-4">{"ছুটিতে থাকার সময়কাল"}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y text-gray-800">
+              <tbody className="divide-y text-gray-700">
                 {leaveList.map((emp) => (
                   <tr key={emp.id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="p-4 text-gray-900 font-black">{emp.fullName}</td>
+                    <td className="p-4 text-gray-900 font-bold">{emp.fullName}</td>
                     <td className="p-4">
-                      <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-black text-amber-800 border border-amber-200">
+                      <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-800 border border-amber-200">
                         {emp.categoryName}
                       </span>
                     </td>
                     <td className="p-4 text-gray-600">{formatDate(emp.startDate)}</td>
-                    <td className="p-4 text-red-700 font-black">
+                    <td className="p-4 text-red-700 font-bold">
                       {`${emp.daysOnLeave} দিন যাবত`}
                     </td>
                   </tr>
@@ -296,8 +329,8 @@ export default function DashboardPage() {
 
       {/* নির্দেশাবলী */}
       <div className="rounded-xl border border-gray-100 bg-[#8B0000]/5 p-6">
-        <h4 className="text-lg font-bold text-[#8B0000]">{"সহজ নির্দেশিকা:"}</h4>
-        <ul className="mt-2 space-y-2 text-base font-bold text-gray-700 list-disc pl-5">
+        <h4 className="text-base font-bold text-[#8B0000]">{"সহজ নির্দেশিকা:"}</h4>
+        <ul className="mt-2 space-y-2 text-sm font-semibold text-gray-700 list-disc pl-5">
           <li>{"নতুন কর্মচারী যোগ করতে এবং কর্মচারীদের ছুটি বা অগ্রিম দিতে বাম পাশের মেনু থেকে \"কর্মচারী তালিকা\"-এ যান।"}</li>
           <li>{"প্রতি মাসের বেতন তৈরি করতে এবং মাসের হিসেব মেলাতে \"বেতন ও পে-রোল\" মেনু ব্যবহার করুন।"}</li>
           <li>{"মোবাইল থেকে দেখার সময় উপরে ডানের বোতাম টিপে মেনু ওপেন করুন।"}</li>
