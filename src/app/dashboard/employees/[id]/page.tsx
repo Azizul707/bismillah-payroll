@@ -27,6 +27,16 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
+// তারিখ সুন্দর করে ফরম্যাট করার হেল্পার ফাংশন (YYYY-MM-DD -> DD-MM-YYYY)
+function formatDate(dateStr: string | null | undefined): string {
+  if (!dateStr) return '';
+  const parts = dateStr.split('-');
+  if (parts.length === 3) {
+    return `${parts[2]}-${parts[1]}-${parts[0]}`; // DD-MM-YYYY
+  }
+  return dateStr;
+}
+
 export default function EmployeeProfilePage({ params }: PageProps) {
   const router = useRouter();
   const resolvedParams = use(params);
@@ -49,7 +59,7 @@ export default function EmployeeProfilePage({ params }: PageProps) {
   const [fullName, setFullName] = useState('');
   const [mobileNumber, setMobileNumber] = useState('');
   const [categoryId, setCategoryId] = useState('');
-  const [joiningDate, setJoiningDate] = useState(''); // যোগদানের তারিখ এডিটের জন্য নতুন স্টেট
+  const [joiningDate, setJoiningDate] = useState(''); 
   const [monthlySalary, setMonthlySalary] = useState('');
   const [remarks, setRemarks] = useState('');
   const [changeReason, setChangeReason] = useState('');
@@ -296,7 +306,7 @@ export default function EmployeeProfilePage({ params }: PageProps) {
         table_name: 'employees',
         record_id: employeeId,
         action_type: 'SOFT_DELETE',
-        old_values: employee,
+        old_values: employee as unknown as Record<string, unknown>,
         new_values: { is_deleted: true },
         change_reason: deleteReason,
         created_by_name: getCurrentUserName()
@@ -307,7 +317,7 @@ export default function EmployeeProfilePage({ params }: PageProps) {
       setIsDeleteModalOpen(false);
       setDeleteReason('');
       alert('কর্মচারীর প্রোফাইল সফলভাবে ডিলিট করা হয়েছে।');
-      router.push('/dashboard/employees'); // ডিলিট হওয়ার পর কর্মচারীদের তালিকায় ব্যাক করবে
+      router.push('/dashboard/employees'); 
 
     } catch (err: unknown) {
       setErrorMsg(err instanceof Error ? err.message : 'ডিলিট করতে অভ্যন্তরীণ ত্রুটি হয়েছে।');
@@ -335,20 +345,20 @@ export default function EmployeeProfilePage({ params }: PageProps) {
           <ArrowLeft className="h-5 w-5 text-[#8B0000]" />
         </Link>
         <div>
-          <h1 className="text-2xl md:text-3xl font-black text-gray-900">{employee.full_name}</h1>
-          <p className="text-sm font-bold text-gray-500 mt-1">{"কোড:"} {employee.employee_code} {"| কাজের তথ্য ও হিস্ট্রি"}</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{employee.full_name}</h1>
+          <p className="text-sm font-semibold text-gray-500 mt-1">{"কোড:"} {employee.employee_code} {"| কাজের তথ্য ও হিস্ট্রি"}</p>
         </div>
       </div>
 
       {/* কর্মচারীর মৌলিক তথ্য গ্রিড */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-        {/* বাম কলাম: ব্যক্তিগত তথ্য */}
+        {/*বাম কলাম: ব্যক্তিগত তথ্য */}
         <div className="md:col-span-2 rounded-xl border border-gray-100 bg-white p-6 shadow-sm space-y-4">
-          <h2 className="text-lg font-black text-gray-900 flex items-center gap-2 border-b pb-2">
+          <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2 border-b pb-2">
             <User className="h-5 w-5 text-gray-400" />
             <span>{"ব্যক্তিগত ও পেশাগত তথ্য"}</span>
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-base font-bold text-gray-700">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-base font-semibold text-gray-700">
             <div className="flex items-center gap-2.5">
               <Phone className="h-5 w-5 text-gray-400" />
               <div>
@@ -367,31 +377,31 @@ export default function EmployeeProfilePage({ params }: PageProps) {
               <Calendar className="h-5 w-5 text-gray-400" />
               <div>
                 <p className="text-xs text-gray-400 font-bold">{"যোগদানের তারিখ"}</p>
-                <span>{employee.joining_date}</span>
+                <span>{formatDate(employee.joining_date)}</span> {/* যোগদানের তারিখ ডাইনামিক ফরম্যাট */}
               </div>
             </div>
           </div>
 
           <div className="border-t pt-4">
             <h3 className="text-xs text-gray-400 font-bold">{"অন্যান্য মন্তব্য"}</h3>
-            <p className="text-base font-bold text-gray-800 mt-1">{employee.remarks || 'কোনো মন্তব্য নেই।'}</p>
+            <p className="text-base font-semibold text-gray-800 mt-1">{employee.remarks || 'কোনো মন্তব্য নেই।'}</p>
           </div>
         </div>
 
         {/* ডান কলাম: বেতন স্ট্যাটাস ও ওয়ান-ক্লিক অ্যাকশন */}
         <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm space-y-4 flex flex-col justify-between">
           <div className="space-y-4">
-            <h2 className="text-lg font-black text-gray-900 flex items-center gap-2 border-b pb-2">
+            <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2 border-b pb-2">
               <DollarSign className="h-5 w-5 text-gray-400" />
               <span>{"বেতন ও কাজের স্ট্যাটাস"}</span>
             </h2>
             <div className="flex items-center justify-between">
-              <span className="font-bold text-gray-500">{"মাসিক বেতন:"}</span>
-              <span className="text-2xl font-black text-gray-900">{employee.monthly_salary} {"টাকা"}</span>
+              <span className="font-semibold text-gray-500">{"মাসিক বেতন:"}</span>
+              <span className="text-xl font-bold text-gray-800">{employee.monthly_salary} {"টাকা"}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="font-bold text-gray-500">{"বর্তমান স্ট্যাটাস:"}</span>
-              <span className={`rounded-full px-3 py-1 text-sm font-black ${
+              <span className="font-semibold text-gray-500">{"বর্তমান স্ট্যাটাস:"}</span>
+              <span className={`rounded-full px-3 py-1 text-sm font-bold ${
                 employee.status === 'active' 
                   ? 'bg-green-100 text-green-700' 
                   : 'bg-amber-100 text-amber-700'
@@ -409,7 +419,7 @@ export default function EmployeeProfilePage({ params }: PageProps) {
                 className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 hover:bg-amber-100/50 p-3 text-center transition-colors cursor-pointer"
               >
                 <CalendarX className="h-6 w-6 text-amber-700" />
-                <span className="text-sm font-black text-amber-900">{"ছুটি শুরু করুন"}</span>
+                <span className="text-sm font-semibold text-amber-900">{"ছুটি শুরু করুন"}</span>
               </button>
             ) : (
               <button
@@ -417,7 +427,7 @@ export default function EmployeeProfilePage({ params }: PageProps) {
                 className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-green-200 bg-green-50 hover:bg-green-100/50 p-3 text-center transition-colors cursor-pointer"
               >
                 <CalendarCheck className="h-6 w-6 text-green-700" />
-                <span className="text-sm font-black text-green-900">{"কাজে যোগদান"}</span>
+                <span className="text-sm font-semibold text-green-900">{"কাজে যোগদান"}</span>
               </button>
             )}
 
@@ -431,16 +441,16 @@ export default function EmployeeProfilePage({ params }: PageProps) {
 
             <button
               onClick={() => { setIsEditModalOpen(true); setErrorMsg(''); }}
-              className="col-span-2 flex items-center justify-center gap-2 rounded-xl border border-gray-200 py-3 text-center hover:bg-gray-50 text-sm font-black text-gray-700 transition-colors cursor-pointer"
+              className="col-span-2 flex items-center justify-center gap-2 rounded-xl border border-gray-200 py-3 text-center hover:bg-gray-50 text-sm font-semibold text-gray-700 transition-colors cursor-pointer"
             >
               <Pencil className="h-4 w-4" />
               <span>{"তথ্য পরিবর্তন করুন"}</span>
             </button>
 
-            {/* প্রোফাইল ডিলিট করার নতুন বাটন */}
+            {/* প্রোফাইল ডিলিট করার বাটন */}
             <button
               onClick={() => { setIsDeleteModalOpen(true); setDeleteReason(''); setErrorMsg(''); }}
-              className="col-span-2 flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 py-3 text-center text-sm font-black text-red-700 transition-colors cursor-pointer"
+              className="col-span-2 flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 py-3 text-center text-sm font-semibold text-red-700 transition-colors cursor-pointer"
             >
               <Trash2 className="h-4 w-4" />
               <span>{"প্রোফাইল ডিলিট করুন"}</span>
@@ -453,7 +463,7 @@ export default function EmployeeProfilePage({ params }: PageProps) {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* ১. কাজের টাইমলাইন / ছুটির ইতিহাস */}
         <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm space-y-4">
-          <h2 className="text-lg font-black text-gray-900 flex items-center gap-2 border-b pb-2">
+          <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2 border-b pb-2">
             <History className="h-5 w-5 text-gray-400" />
             <span>{"হাজিরা ও কাজের টাইমলাইন"}</span>
           </h2>
@@ -466,12 +476,14 @@ export default function EmployeeProfilePage({ params }: PageProps) {
                   <div className={`absolute -left-[7px] top-1.5 h-3 w-3 rounded-full ${
                     item.status === 'active' ? 'bg-green-500' : 'bg-amber-500'
                   }`} />
-                  <div className="text-base font-bold text-gray-700">
-                    <p className="font-black text-gray-950">
+                  <div className="text-base font-semibold text-gray-700">
+                    <p className="font-bold text-gray-950">
                       {item.status === 'active' ? 'ডিউটিতে সক্রিয়' : 'ছুটি শুরু'} 
                       {item.leave_type && ` (ছুটি: ${item.leave_type === 'unpaid' ? 'অবৈতনিক' : 'অন্যান্য'})`}
                     </p>
-                    <p className="text-xs text-gray-400 mt-0.5">{"শুরু:"} {item.start_date} {item.end_date ? `| শেষ: ${item.end_date}` : '| চলমান'}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      {"শুরু: "} {formatDate(item.start_date)} {item.end_date ? `| শেষ: ${formatDate(item.end_date)}` : ' | চলমান'}
+                    </p>
                     {item.reason && <p className="text-sm text-gray-500 mt-1">{"কারণ:"} {item.reason}</p>}
                   </div>
                 </div>
@@ -482,7 +494,7 @@ export default function EmployeeProfilePage({ params }: PageProps) {
 
         {/* ২. অগ্রিম বেতন হিস্ট্রি */}
         <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm space-y-4">
-          <h2 className="text-lg font-black text-gray-900 flex items-center gap-2 border-b pb-2">
+          <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2 border-b pb-2">
             <Coins className="h-5 w-5 text-gray-400" />
             <span>{"অগ্রিম বেতন ইতিহাস"}</span>
           </h2>
@@ -492,8 +504,8 @@ export default function EmployeeProfilePage({ params }: PageProps) {
             ) : (
               advances.map((item) => (
                 <div key={item.id} className="flex items-center justify-between rounded-lg bg-gray-50 p-4 border border-gray-100">
-                  <div className="text-base font-bold text-gray-700">
-                    <p className="font-black text-gray-950">{item.amount} {"টাকা"}</p>
+                  <div className="text-base font-semibold text-gray-700">
+                    <p className="font-bold text-gray-950">{item.amount} {"টাকা"}</p>
                     <p className="text-xs text-gray-400 mt-0.5">{"মাস:"} {item.advance_month}-{item.advance_year}</p>
                     {item.reason && <p className="text-sm text-gray-500 mt-1">{"কারণ:"} {item.reason}</p>}
                   </div>
@@ -509,7 +521,7 @@ export default function EmployeeProfilePage({ params }: PageProps) {
                         alert(err instanceof Error ? err.message : 'ডিলিট করতে ত্রুটি হয়েছে।');
                       }
                     }}
-                    className="text-red-600 hover:text-red-700 text-sm font-black cursor-pointer"
+                    className="text-red-600 hover:text-red-700 text-sm font-semibold cursor-pointer"
                   >
                     {"মুছে ফেলুন"}
                   </button>
@@ -526,12 +538,12 @@ export default function EmployeeProfilePage({ params }: PageProps) {
       {isLeaveModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl space-y-4">
-            <h2 className="text-xl font-black text-gray-900 border-b pb-2 flex items-center gap-2">
+            <h2 className="text-xl font-bold text-gray-900 border-b pb-2 flex items-center gap-2">
               <CalendarX className="h-5 w-5 text-amber-600" />
               <span>{"ছুটি শুরু করুন"}</span>
             </h2>
-            <form onSubmit={handleLeaveSubmit} className="space-y-4 text-base font-bold text-gray-700">
-              {errorMsg && <div className="rounded-lg bg-red-50 p-3 text-sm font-black text-red-600">{errorMsg}</div>}
+            <form onSubmit={handleLeaveSubmit} className="space-y-4 text-base font-semibold text-gray-700">
+              {errorMsg && <div className="rounded-lg bg-red-50 p-3 text-sm font-semibold text-red-600">{errorMsg}</div>}
               
               <div className="space-y-1">
                 <label className="block">{"ছুটি শুরু হওয়ার তারিখ"}</label>
@@ -554,7 +566,7 @@ export default function EmployeeProfilePage({ params }: PageProps) {
                   <option value="unpaid">{"অবৈতনিক ছুটি (Unpaid) - বেতন থেকে কাটা যাবে"}</option>
                   <option value="paid">{"বৈতনিক ছুটি (Paid) - পূর্ণ বেতন পাবেন"}</option>
                   <option value="sick">{"অসুস্থতাজনিত ছুটি (Sick)"}</option>
-                  <option value="emergency">{"জরুরি পরিস্থিতি ছুটি (Emergency)"}</option>
+                  <option value="emergency">{"জরুরি परिस्थिति ছুটি (Emergency)"}</option>
                   <option value="suspension">{"সাময়িক বরখাস্ত (Suspension) - বেতন কাটা যাবে"}</option>
                 </select>
               </div>
@@ -587,12 +599,12 @@ export default function EmployeeProfilePage({ params }: PageProps) {
       {isResumeModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl space-y-4">
-            <h2 className="text-xl font-black text-gray-900 border-b pb-2 flex items-center gap-2">
+            <h2 className="text-xl font-bold text-gray-900 border-b pb-2 flex items-center gap-2">
               <CalendarCheck className="h-5 w-5 text-green-600" />
               <span>{"কাজে যোগদান"}</span>
             </h2>
-            <form onSubmit={handleResumeSubmit} className="space-y-4 text-base font-bold text-gray-700">
-              {errorMsg && <div className="rounded-lg bg-red-50 p-3 text-sm font-black text-red-600">{errorMsg}</div>}
+            <form onSubmit={handleResumeSubmit} className="space-y-4 text-base font-semibold text-gray-700">
+              {errorMsg && <div className="rounded-lg bg-red-50 p-3 text-sm font-bold text-red-600">{errorMsg}</div>}
               
               <div className="space-y-1">
                 <label className="block">{"যোগদানের তারিখ"}</label>
@@ -622,12 +634,12 @@ export default function EmployeeProfilePage({ params }: PageProps) {
       {isAdvanceModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl space-y-4">
-            <h2 className="text-xl font-black text-gray-900 border-b pb-2 flex items-center gap-2">
+            <h2 className="text-xl font-bold text-gray-900 border-b pb-2 flex items-center gap-2">
               <Coins className="h-5 w-5 text-[#8B0000]" />
               <span>{"অগ্রিম বেতন প্রদান"}</span>
             </h2>
-            <form onSubmit={handleAdvanceSubmit} className="space-y-4 text-base font-bold text-gray-700">
-              {errorMsg && <div className="rounded-lg bg-red-50 p-3 text-sm font-black text-red-600">{errorMsg}</div>}
+            <form onSubmit={handleAdvanceSubmit} className="space-y-4 text-base font-semibold text-gray-700">
+              {errorMsg && <div className="rounded-lg bg-red-50 p-3 text-sm font-bold text-red-600">{errorMsg}</div>}
               
               <div className="space-y-1">
                 <label className="block">{"টাকার পরিমাণ (ইংলিশ সংখ্যায়)"}</label>
@@ -668,12 +680,12 @@ export default function EmployeeProfilePage({ params }: PageProps) {
       {isEditModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-black text-gray-900 border-b pb-2 flex items-center gap-2">
+            <h2 className="text-xl font-bold text-gray-900 border-b pb-2 flex items-center gap-2">
               <Pencil className="h-5 w-5 text-gray-500" />
               <span>{"তথ্য পরিবর্তন করুন"}</span>
             </h2>
-            <form onSubmit={handleEditSubmit} className="space-y-4 text-base font-bold text-gray-700">
-              {errorMsg && <div className="rounded-lg bg-red-50 p-3 text-sm font-black text-red-600">{errorMsg}</div>}
+            <form onSubmit={handleEditSubmit} className="space-y-4 text-base font-semibold text-gray-700">
+              {errorMsg && <div className="rounded-lg bg-red-50 p-3 text-sm font-bold text-red-600">{errorMsg}</div>}
               
               <div className="space-y-1">
                 <label className="block">{"পূর্ণ নাম"}</label>
@@ -745,7 +757,7 @@ export default function EmployeeProfilePage({ params }: PageProps) {
 
               {/* obligatoire audit */}
               <div className="space-y-1 bg-red-50 p-3 rounded-lg border border-red-100">
-                <label className="block text-red-900 font-black">{"পরিবর্তনের কারণ (বাধ্যতামূলক)"}</label>
+                <label className="block text-red-900 font-bold">{"পরিবর্তনের কারণ (বাধ্যতামূলক)"}</label>
                 <input
                   type="text"
                   required
@@ -773,15 +785,15 @@ export default function EmployeeProfilePage({ params }: PageProps) {
       {isDeleteModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl space-y-4">
-            <h2 className="text-xl font-black text-gray-900 border-b pb-2 flex items-center gap-2">
+            <h2 className="text-xl font-bold text-gray-900 border-b pb-2 flex items-center gap-2">
               <Trash2 className="h-5 w-5 text-red-600" />
               <span>{"প্রোফাইল ডিলিট করুন"}</span>
             </h2>
             <form onSubmit={handleDeleteSubmit} className="space-y-4 text-base font-bold text-gray-700">
-              {errorMsg && <div className="rounded-lg bg-red-50 p-3 text-sm font-black text-red-600">{errorMsg}</div>}
+              {errorMsg && <div className="rounded-lg bg-red-50 p-3 text-sm font-bold text-red-600">{errorMsg}</div>}
               
               <div className="space-y-1 bg-red-50 p-4 rounded-lg border border-red-100">
-                <p className="text-sm font-black text-red-900">
+                <p className="text-sm font-bold text-red-900">
                   {"সতর্কতা: প্রোফাইল ডিলিট করলে কর্মচারী নিষ্ক্রিয় হয়ে যাবে এবং তালিকায় দেখা যাবে না। তবে অতীতের বেতন পরিশোধ বা অগ্রিমের ইতিহাস সুরক্ষিত থাকবে।"}
                 </p>
               </div>
