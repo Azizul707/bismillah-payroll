@@ -33,14 +33,14 @@ const styles = StyleSheet.create({
     color: '#1a1a1a',
     backgroundColor: '#ffffff',
   },
-  // পাতার একদম ওপরে ভাউচারটিকে একটি বর্ডারড বক্সে সীমাবদ্ধ করা হলো
+  // পাতার ওপরে ভাউচার বক্স ডিজাইন
   voucherContainer: {
     borderWidth: 1.5,
     borderColor: '#e5e7eb',
     borderRadius: 8,
     padding: 14,
     backgroundColor: '#ffffff',
-    height: 275, // লেখা বড় করার পর স্পেস অ্যাডজাস্ট করতে উচ্চতা বাড়ানো হয়েছে
+    height: 275, 
   },
   headerContainer: {
     borderBottomWidth: 2,
@@ -52,12 +52,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   companyName: {
-    fontSize: 20, // কোম্পানির নাম ১৫ থেকে ২০ করা হলো
+    fontSize: 20, 
     fontWeight: 'bold',
     color: '#8B0000',
   },
   slipTitle: {
-    fontSize: 12, // টাইটেল ১০ থেকে ১২ করা হলো
+    fontSize: 12, 
     fontWeight: 'bold',
     color: '#555555',
     textAlign: 'right',
@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fafafa',
   },
   columnTitle: {
-    fontSize: 11, // কলাম টাইটেল ৯ থেকে ১১ করা হলো
+    fontSize: 11, 
     fontWeight: 'bold',
     color: '#ffffff',
     backgroundColor: '#8B0000',
@@ -95,11 +95,11 @@ const styles = StyleSheet.create({
   },
   fieldLabel: {
     color: '#555555',
-    fontSize: 10, // লেবেল ৮ থেকে ১০ করা হলো
+    fontSize: 10, 
   },
   fieldValue: {
     fontWeight: 'bold',
-    fontSize: 10, // ভ্যালু ৮ থেকে ১০ করা হলো
+    fontSize: 10, 
   },
   netSalaryRow: {
     marginTop: 6,
@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
     color: '#000000',
   },
   netSalaryValue: {
-    fontSize: 13, // নিট প্রদেয় বেতন ১০ থেকে ১৩ করা হলো
+    fontSize: 13, 
     fontWeight: 'bold',
     color: '#8B0000',
   },
@@ -144,7 +144,6 @@ const styles = StyleSheet.create({
     fontSize: 8.5,
     color: '#777777',
   },
-  // কাঁচি চিহ্নের কাটিং লাইনের ডিজাইন
   cutLineContainer: {
     marginTop: 25,
     alignItems: 'center',
@@ -176,10 +175,14 @@ interface SalarySlipProps {
   };
 }
 
-// ৩. রিঅ্যাক্ট-পিডিএফ কমপ্যাক্ট ডকুমেন্ট ভাউচার (A4 পেজের শীর্ষে সেট করা)
-const SalarySlipDocument = ({ data }: SalarySlipProps) => (
+// পিডিএফ ডকুমেন্টের টাইপ ইন্টারফেস
+interface SalarySlipDocProps extends SalarySlipProps {
+  printDate: string;
+}
+
+// ৩. রিঅ্যাক্ট-পিডিএফ কমপ্যাক্ট ডকুমেন্ট ভাউচার (A4 পেজের শীর্ষে এবং ডাইনামিক তারিখ সহ)
+const SalarySlipDocument = ({ data, printDate }: SalarySlipDocProps) => (
   <Document>
-    {/* Page Size: Standard A4 [595.28 x 841.89] */}
     <Page size="A4" style={styles.page}>
       <View style={styles.voucherContainer}>
         {/* হেডার */}
@@ -190,7 +193,7 @@ const SalarySlipDocument = ({ data }: SalarySlipProps) => (
 
         {/* ৩-কলাম গ্রিড লেআউট */}
         <View style={styles.gridThreeColumn}>
-          {/* কলাম ১: কর্মচারীর বিবরণ */}
+          {/* কলাম ১: কর্মচারীর বিবরণ (শাখা অপশন বাতিল করা হয়েছে) */}
           <View style={styles.column}>
             <Text style={styles.columnTitle}>{"কর্মচারির বিবরণ"}</Text>
             <View style={styles.fieldRow}>
@@ -200,10 +203,6 @@ const SalarySlipDocument = ({ data }: SalarySlipProps) => (
             <View style={styles.fieldRow}>
               <Text style={styles.fieldLabel}>{"নাম:"}</Text>
               <Text style={styles.fieldValue}>{data.employeeName}</Text>
-            </View>
-            <View style={styles.fieldRow}>
-              <Text style={styles.fieldLabel}>{"শাখা:"}</Text>
-              <Text style={styles.fieldValue}>{data.branchName || "N/A"}</Text>
             </View>
             <View style={styles.fieldRow}>
               <Text style={styles.fieldLabel}>{"ক্যাটাগরি:"}</Text>
@@ -260,10 +259,10 @@ const SalarySlipDocument = ({ data }: SalarySlipProps) => (
           <Text style={styles.signatureLine}>{"কর্তৃপক্ষের স্বাক্ষর"}</Text>
         </View>
 
-        {/* ফুটার */}
+        {/* ফুটার (ডাইনামিক মুদ্রণ তারিখ সহ) */}
         <View style={styles.footer}>
           <Text>{"* এই স্লিপটি বিসমিল্লাহ প্রতিষ্ঠানের অভ্যন্তরীণ ব্যবহারের জন্য তৈরি।"}</Text>
-          <Text>{"মুদ্রণের তারিখ: 24-06-2026"}</Text>
+          <Text>{"মুদ্রণের তারিখ: " + printDate}</Text>
         </View>
       </View>
 
@@ -280,23 +279,42 @@ const SalarySlipDocument = ({ data }: SalarySlipProps) => (
 // ৪. ওয়ান-ক্লিক লাইভ প্রিভিউ এবং ডাউনলোড বাটন কম্পোনেন্ট
 export function SalarySlipDownloadButton({ data }: SalarySlipProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [printDate, setPrintDate] = useState('24-06-2026'); // Hydration সেফ ফলব্যাক
   const [instance, updateInstance] = usePDF({ 
-    document: <SalarySlipDocument data={data} /> 
+    document: <SalarySlipDocument data={data} printDate={printDate} /> 
   });
 
-  // ডাটা পরিবর্তন হলে পিডিএফ আপডেট করা হবে (Next.js 15 কমপ্লায়েন্ট অ্যাসিনক্রোনাস মাইক্রো-টাস্ক টিক)
+  // রিয়াল-টাইম আজকের তারিখ ডাইনামিক সেটআপ (Next.js 15-এর কড়া Rule #1 মেনে মাইক্রো-টাস্ক ডিফারেল সহ)
   useEffect(() => {
     let active = true;
     (async () => {
-      await Promise.resolve();
+      await Promise.resolve(); // 🌟 রেন্ডার ক্যাস্কেডিং ও বিল্ড ফেল প্রতিরোধক মাইক্রো-টাস্ক টিক
       if (active) {
-        updateInstance(<SalarySlipDocument data={data} />);
+        const now = new Date();
+        const d = String(now.getDate()).padStart(2, '0');
+        const m = String(now.getMonth() + 1).padStart(2, '0');
+        const y = String(now.getFullYear());
+        setPrintDate(`${d}-${m}-${y}`);
       }
     })();
     return () => {
       active = false;
     };
-  }, [data, updateInstance]);
+  }, []);
+
+  // ডাটা পরিবর্তন হলে পিডিএফ আপডেট করা হবে (অ্যাসিনক্রোনাস মাইক্রো-টাস্ক টিক)
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      await Promise.resolve();
+      if (active) {
+        updateInstance(<SalarySlipDocument data={data} printDate={printDate} />);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [data, printDate, updateInstance]);
 
   const fileName = `Salary-Slip-${data.employeeCode}-${data.month}-${data.year}.pdf`;
 
@@ -350,13 +368,12 @@ export function SalarySlipDownloadButton({ data }: SalarySlipProps) {
 
                 {/* ৩-কলাম গ্রিড লেআউট */}
                 <div className="grid grid-cols-3 gap-3 text-xs">
-                  {/* কলাম ১: কর্মচারীর বিবরণ */}
+                  {/* কলাম ১: কর্মচারীর বিবরণ (শাখা বাদ দেওয়া হয়েছে) */}
                   <div className="border border-gray-150 rounded-lg p-3 bg-gray-50">
                     <div className="bg-[#8B0000] text-white py-1.5 text-center font-bold rounded-md mb-2">{"কর্মচারির বিবরণ"}</div>
                     <div className="space-y-1 font-semibold text-gray-700">
                       <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"কোড:"}</span><span className="font-bold">{data.employeeCode}</span></div>
                       <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"নাম:"}</span><span className="font-bold">{data.employeeName}</span></div>
-                      <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"শাখা:"}</span><span className="font-bold">{data.branchName || "N/A"}</span></div>
                       <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"ক্যাটাগরি:"}</span><span className="font-bold">{data.categoryName}</span></div>
                     </div>
                   </div>
@@ -389,14 +406,14 @@ export function SalarySlipDownloadButton({ data }: SalarySlipProps) {
 
                 {/* স্বাক্ষর লাইন */}
                 <div className="flex justify-between pt-6 px-6 text-xs text-center font-bold">
-                  <div className="w-[35%] border-t border-black pt-1">{"কর্মচারীর স্বাক্ষর"}</div>
+                  <div className="w-[35%] border-t border-black pt-1">{"कर्मचारীর স্বাক্ষর"}</div>
                   <div className="w-[35%] border-t border-black pt-1">{"কর্তৃপক্ষের স্বাক্ষর"}</div>
                 </div>
 
-                {/* ফুটার */}
+                {/* ফুটার (ডাইনামিক মুদ্রণ তারিখ সহ) */}
                 <div className="text-[10px] text-gray-400 text-center border-t border-gray-100 pt-2 font-semibold">
                   <p>{"* এই স্লিপটি বিসমিল্লাহ প্রতিষ্ঠানের অভ্যন্তরীণ ব্যবহারের জন্য তৈরি।"}</p>
-                  <p>{"মুদ্রণের তারিখ: 24-06-2026"}</p>
+                  <p>{"মুদ্রণের তারিখ: "}{printDate}</p>
                 </div>
 
               </div>
