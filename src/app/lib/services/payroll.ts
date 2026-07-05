@@ -252,4 +252,48 @@ export class PayrollService {
       createdByName: ownerName,
     });
   }
+
+  /**
+   * পে-রোল আইটেমের পেমেন্ট স্ট্যাটাস টগল করা এবং অডিট লগ সংরক্ষণ করা
+   */
+  static async togglePaymentStatus(
+    payrollItemId: string,
+    isPaid: boolean,
+    adminName: string
+  ): Promise<void> {
+    const paidAt = isPaid ? new Date().toISOString() : null;
+
+    // ১. পে-রোল আইটেম আপডেট
+    const { error: updateErr } = await db.payroll_items()
+      .update({
+        is_paid: isPaid,
+        paid_at: paidAt,
+        paid_by_name: isPaid ? adminName : null,
+      })
+      .eq('id', payrollItemId);
+
+    if (updateErr) throw updateErr;
+
+    // ২. কর্মচারীর বিবরণ আনতে
+    const { data: itemData } = await db.payroll_items()
+      .select('*, employees(full_name, employee_code)')
+      .eq('id', payrollItemId)
+      .maybeSingle();
+
+    const empName = itemData?.employees?.full_name || 'কর্মচারী';
+    const empCode = itemData?.employees?.employee_code || 'N/A';
+
+    // ৩. অডিট লগ সংরক্ষণ
+    await AuditService.logChange({
+      tableName: 'payroll_items',
+      recordId: payrollItemId,
+      actionType: 'UPDATE',
+      newValues: { is_paid: isPaid, paid_at: paidAt },
+      changeReason: isPaid
+        ? `${empName} (${empCode}) এর বেতন পরিশোধ করা হয়েছে।`
+        : `${empName} (${empCode}) এর বেতন পরিশোধ বাতিল করা হয়েছে।`,
+      createdBy: '00000000-0000-0000-0000-000000000000',
+      createdByName: adminName,
+    });
+  }
 }

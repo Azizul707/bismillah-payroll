@@ -10,7 +10,7 @@ import {
   Font, 
   usePDF
 } from '@react-pdf/renderer';
-import { Printer, X, Download } from 'lucide-react';
+import { Printer, X, Download, CheckCircle2 } from 'lucide-react';
 
 // ১. অত্যন্ত স্থিতিশীল ও ক্র্যাশ-ফ্রি বাংলা ফন্ট রেজিস্টার করা
 Font.register({
@@ -23,6 +23,16 @@ const formatCurrency = (amount: number | string) => {
   const num = Number(amount);
   return isNaN(num) ? '0' : num.toLocaleString('en-US');
 };
+
+// পেমেন্ট তারিখ ফরম্যাটার
+function formatPaymentDate(isoString: string | null): string {
+  if (!isoString) return '';
+  const date = new Date(isoString);
+  const d = String(date.getDate()).padStart(2, '0');
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const y = date.getFullYear();
+  return `${d}-${m}-${y}`;
+}
 
 // ২. স্ট্যান্ডার্ড A4 পেজের শীর্ষে ভাউচার স্থাপন ও বড় টেক্সট উপযোগী স্টাইলশিট
 const styles = StyleSheet.create({
@@ -172,6 +182,8 @@ interface SalarySlipProps {
     grossSalary: number;
     advanceAmount: number;
     netSalary: number;
+    is_paid?: boolean;
+    paid_at?: string | null;
   };
 }
 
@@ -250,6 +262,18 @@ const SalarySlipDocument = ({ data, printDate }: SalarySlipDocProps) => (
               <Text style={styles.netSalaryLabel}>{"নিট বেতন:"}</Text>
               <Text style={styles.netSalaryValue}>{`${formatCurrency(data.netSalary)} টাকা`}</Text>
             </View>
+
+            {/* পেমেন্ট স্ট্যাটাস */}
+            {data.is_paid && (
+              <View style={[styles.fieldRow, { backgroundColor: '#dcfce7', borderRadius: 3, paddingHorizontal: 6, marginTop: 4 }]}>
+                <Text style={[styles.fieldLabel, { color: '#166534', fontWeight: 'bold' }]}>
+                  {"পরিশোধ:"}
+                </Text>
+                <Text style={[styles.fieldValue, { color: '#166534', fontSize: 9 }]}>
+                  {"পরিশোধিত" + (data.paid_at ? ' (' + formatPaymentDate(data.paid_at) + ')' : '')}
+                </Text>
+              </View>
+            )}
           </View>
         </View>
 
@@ -400,6 +424,21 @@ export function SalarySlipDownloadButton({ data }: SalarySlipProps) {
                         <span>{"নিট বেতন:"}</span>
                         <span className="text-[#8B0000]">{formatCurrency(data.netSalary)} {"টাকা"}</span>
                       </div>
+
+                      {/* পেমেন্ট স্ট্যাটাস ব্যাজ */}
+                      {data.is_paid && (
+                        <div className="mt-2 bg-green-100 text-green-700 font-bold p-1.5 rounded-md flex items-center justify-between text-[11px]">
+                          <span className="flex items-center gap-1">
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                            {"পরিশোধিত"}
+                          </span>
+                          {data.paid_at && (
+                            <span className="text-gray-500 font-semibold">
+                              {formatPaymentDate(data.paid_at)}
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

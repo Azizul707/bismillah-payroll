@@ -1,20 +1,46 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { 
-  CreditCard, 
-  Lock, 
-  Unlock, 
-  AlertCircle, 
+import {
+  CreditCard,
+  Lock,
+  Unlock,
+  AlertCircle,
   CheckCircle2,
   RefreshCw,
   Search,
-  SlidersHorizontal 
+  SlidersHorizontal,
+  Calendar,
+  DollarSign
 } from 'lucide-react';
 import { db } from '@/app/lib/supabase/client';
 import { Payroll, PayrollItem } from '@/app/lib/supabase/types';
 import { PayrollService } from '@/app/lib/services/payroll';
 import { SalarySlipDownloadButton } from '@/components/salary-slip-pdf';
+
+// পেমেন্ট তারিখ ফরম্যাটার
+function formatPaymentDate(isoString: string | null): string {
+  if (!isoString) return '';
+  const date = new Date(isoString);
+  const d = String(date.getDate()).padStart(2, '0');
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const y = date.getFullYear();
+  return `${d}-${m}-${y}`;
+}
+
+// বর্তমান প্রಯোগকারীর নাম বের করা
+function getCurrentUserName(): string {
+  try {
+    const raw = localStorage.getItem('bismillah_current_user');
+    if (raw) {
+      const user = JSON.parse(raw);
+      return user.fullName || 'অজ্ঞাত';
+    }
+  } catch {
+    // ignore
+  }
+  return 'অজ্ঞাত';
+}
 
 interface ExtendedPayrollItem extends PayrollItem {
   employees: { 
@@ -35,6 +61,10 @@ export default function PayrollPage() {
   // অনুসন্ধান ও ফিল্টার স্টেট
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+
+  // বেতন পরিশোধ স্ট্যাটাস ফিল্টার
+  const [paymentFilter, setPaymentFilter] = useState<'all' | 'paid' | 'unpaid'>('all');
+  const [updatingPaymentId, setUpdatingPaymentId] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
@@ -203,34 +233,55 @@ export default function PayrollPage() {
       setUnlockReason('');
       await loadPayrollData();
       alert('বেতন হিসাব সফলভাবে আনলক করা হয়েছে।');
-    } catch (err) {
+    } catch (err: unknown) {
       console.error(err);
-      setModalError('আনলক করতে অভ্যন্তরীণ সমস্যা হয়েছে।');
+      setModalError(err instanceof Error ? err.message : 'আনলক করতে সমস্যা হয়েছে।');
     } finally {
       setSubmitting(false);
     }
   }
 
-  // রিয়েল-টাইম ফিল্টারিং লজিক (নাম, কোড, মোবাইল, ক্যাটাগরি সার্চ ও ড্রপডাউন ক্যাটাগরি ফিল্টার)
+  // বেতন পরিশোধ স্ট্যাটাস টগল হ্যান্ডলার
+  async function handleTogglePayment(itemId: string, currentStatus: boolean) {
+    try {
+      setUpdatingPaymentId(itemId);
+      const newStatus = !currentStatus;
+      await PayrollService.togglePaymentStatus(itemId, newStatus, getCurrentUserName());
+      await loadPayrollData();
+    } catch (err: unknown) {
+      console.error(err);
+      alert(err instanceof Error ? err.message : 'পেমেন্ট স্ট্যাটাস পরিবর্তনে সমস্যা হয়েছে।');
+    } finally {
+      setUpdatingPaymentId(null);
+    }
+  }
+
+  // রিয়েল-টাইম ফিল্টারিং লজিক (নাম, কোড, ক্যাটাগরি সার্চ ও পেমেন্ট স্ট্যাটাস ফিল্টার)
   const filteredPayrollItems = payrollItems.filter((item) => {
     const emp = item.employees;
     if (!emp) return false;
 
     // ১. টেক্সট সার্চ লজিক
     const text = searchTerm.toLowerCase().trim();
-    const matchesSearch = 
-      !text || 
+    const matchesSearch =
+      !text ||
       emp.full_name?.toLowerCase().includes(text) ||
       emp.employee_code?.toLowerCase().includes(text) ||
       (emp.mobile_number && emp.mobile_number.includes(text)) ||
       emp.categories?.category_name?.toLowerCase().includes(text);
 
     // ২. ড্রপডাউন ক্যাটাগরি ফিল্টার লজিক
-    const matchesCategory = 
-      selectedCategory === 'all' || 
+    const matchesCategory =
+      selectedCategory === 'all' ||
       emp.categories?.category_name === selectedCategory;
 
-    return matchesSearch && matchesCategory;
+    // ৩. পেমেন্ট স্ট্যাটাস ফিল্টার লজিক
+    const matchesPayment =
+      paymentFilter === 'all' ||
+      (paymentFilter === 'paid' && item.is_paid) ||
+      (paymentFilter === 'unpaid' && !item.is_paid);
+
+    return matchesSearch && matchesCategory && matchesPayment;
   });
 
   return (
@@ -372,6 +423,30 @@ export default function PayrollPage() {
         </div>
       )}
 
+      {/* পেমেন্ট স্ট্যাটাস ফিল্টার ট্যাব (শুধুমাত্র ডেটা থাকলে দেখানো) */}
+      {payrollItems.length > 0 && (
+        <div className="flex items-center gap-2 text-base font-bold">
+          <span className="text-sm text-gray-400 mr-1">{"পেমেন্ট:"}</span>
+          {[
+            { key: 'all', label: 'সবাই' },
+            { key: 'paid', label: 'পরিশোধিত' },
+            { key: 'unpaid', label: 'অপরিশোধিত' },
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setPaymentFilter(tab.key as 'all' | 'paid' | 'unpaid')}
+              className={`px-4 py-2 rounded-lg text-sm font-black transition-all duration-150 cursor-pointer ${
+                paymentFilter === tab.key
+                  ? 'bg-[#8B0000] text-white shadow'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* পে-রোল বিস্তারিত টেবিল */}
       {loading ? (
         <div className="text-center py-12">
@@ -405,6 +480,7 @@ export default function PayrollPage() {
                 <th className="p-4">{"মোট (Gross)"}</th>
                 <th className="p-4">{"অগ্রিম সমন্বয়"}</th>
                 <th className="p-4 font-black text-[#8B0000]">{"নিট বেতন"}</th>
+                <th className="p-4 text-center">{"পরিশোধ"}</th>
                 <th className="p-4 text-center">{"রসিদ"}</th>
               </tr>
             </thead>
@@ -426,14 +502,45 @@ export default function PayrollPage() {
                   <td className="p-4 font-black">{item.gross_salary} {"টাকা"}</td>
                   <td className="p-4 text-amber-700">-{item.advance_deducted} {"টাকা"}</td>
                   <td className="p-4 font-black text-lg text-green-800">{item.net_salary} {"টাকা"}</td>
+                  {/* পেমেন্ট স্ট্যাটাস কলাম */}
+                  <td className="p-4 text-center">
+                    {item.is_paid ? (
+                      <div className="space-y-1">
+                        <span className="inline-flex items-center rounded-full bg-green-100 text-green-700 px-3 py-1 text-xs font-black">
+                          <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
+                          {"পরিশোধিত"}
+                        </span>
+                        <p className="text-[11px] font-bold text-gray-500 flex items-center justify-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          {formatPaymentDate(item.paid_at)}
+                        </p>
+                        <button
+                          onClick={() => handleTogglePayment(item.id, true)}
+                          disabled={updatingPaymentId === item.id}
+                          className="text-[11px] font-black text-red-500 hover:text-red-700 underline cursor-pointer disabled:opacity-50"
+                        >
+                          {updatingPaymentId === item.id ? 'বদলানো হচ্ছে...' : 'বাতিল'}
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => handleTogglePayment(item.id, false)}
+                        disabled={updatingPaymentId === item.id}
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-green-50 border border-green-200 hover:bg-green-100 text-green-700 px-3 py-1.5 text-xs font-black transition-colors cursor-pointer disabled:opacity-50"
+                      >
+                        <DollarSign className="h-3.5 w-3.5" />
+                        <span>{updatingPaymentId === item.id ? 'সংরক্ষণ...' : 'বেতন পরিশোধ'}</span>
+                      </button>
+                    )}
+                  </td>
                   {/* স্যালারি স্লিপ পিডিএফ বাটন ইন্টিগ্রেশন */}
                   <td className="p-4 text-center">
-                    <SalarySlipDownloadButton 
+                    <SalarySlipDownloadButton
                       data={{
                         employeeName: item.employees?.full_name || '',
                         employeeCode: item.employees?.employee_code || '',
-                        branchName: 'প্রধান শাখা', 
-                        categoryName: item.employees?.categories?.category_name || 'কারিগর',   
+                        branchName: 'প্রধান শাখা',
+                        categoryName: item.employees?.categories?.category_name || 'কারিগর',
                         month: selectedMonth,
                         year: selectedYear,
                         monthlySalary: Number(item.monthly_salary),
@@ -444,7 +551,9 @@ export default function PayrollPage() {
                         grossSalary: Number(item.gross_salary),
                         advanceAmount: Number(item.advance_deducted),
                         netSalary: Number(item.net_salary),
-                      }} 
+                        is_paid: item.is_paid,
+                        paid_at: item.paid_at,
+                      }}
                     />
                   </td>
                 </tr>

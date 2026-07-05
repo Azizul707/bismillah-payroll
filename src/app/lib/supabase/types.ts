@@ -79,6 +79,9 @@ export interface PayrollItem {
   gross_salary: number;
   advance_deducted: number;
   net_salary: number;
+  is_paid: boolean;
+  paid_at: string | null;
+  paid_by_name: string | null;
   created_at: string;
 }
 
