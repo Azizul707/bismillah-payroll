@@ -1,16 +1,16 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { 
-  Document, 
-  Page, 
-  Text, 
-  View, 
-  StyleSheet, 
-  Font, 
+import React, { useEffect, useState, useCallback } from 'react';
+import {
+  Document,
+  Page,
+  Text,
+  View,
+  StyleSheet,
+  Font,
   usePDF
 } from '@react-pdf/renderer';
-import { Printer, X, Download, CheckCircle2 } from 'lucide-react';
+import { Printer, X, Download, CheckCircle2, DollarSign, Calendar } from 'lucide-react';
 
 // ১. অত্যন্ত স্থিতিশীল ও ক্র্যাশ-ফ্রি বাংলা ফন্ট রেজিস্টার করা
 Font.register({
@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 14,
     backgroundColor: '#ffffff',
-    height: 275, 
+    height: 275,
   },
   headerContainer: {
     borderBottomWidth: 2,
@@ -62,12 +62,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   companyName: {
-    fontSize: 20, 
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#8B0000',
   },
   slipTitle: {
-    fontSize: 12, 
+    fontSize: 12,
     fontWeight: 'bold',
     color: '#555555',
     textAlign: 'right',
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fafafa',
   },
   columnTitle: {
-    fontSize: 11, 
+    fontSize: 11,
     fontWeight: 'bold',
     color: '#ffffff',
     backgroundColor: '#8B0000',
@@ -105,11 +105,11 @@ const styles = StyleSheet.create({
   },
   fieldLabel: {
     color: '#555555',
-    fontSize: 10, 
+    fontSize: 10,
   },
   fieldValue: {
     fontWeight: 'bold',
-    fontSize: 10, 
+    fontSize: 10,
   },
   netSalaryRow: {
     marginTop: 6,
@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
     color: '#000000',
   },
   netSalaryValue: {
-    fontSize: 13, 
+    fontSize: 13,
     fontWeight: 'bold',
     color: '#8B0000',
   },
@@ -187,7 +187,6 @@ interface SalarySlipProps {
   };
 }
 
-// পিডিএফ ডকুমেন্টের টাইপ ইন্টারফেস
 interface SalarySlipDocProps extends SalarySlipProps {
   printDate: string;
 }
@@ -205,7 +204,7 @@ const SalarySlipDocument = ({ data, printDate }: SalarySlipDocProps) => (
 
         {/* ৩-কলাম গ্রিড লেআউট */}
         <View style={styles.gridThreeColumn}>
-          {/* কলাম ১: কর্মচারীর বিবরণ (শাখা অপশন বাতিল করা হয়েছে) */}
+          {/* কলাম ১: কর্মচারীর বিবরণ */}
           <View style={styles.column}>
             <Text style={styles.columnTitle}>{"কর্মচারির বিবরণ"}</Text>
             <View style={styles.fieldRow}>
@@ -293,26 +292,59 @@ const SalarySlipDocument = ({ data, printDate }: SalarySlipDocProps) => (
       {/* কাটিং কাঁচি ডটেড লাইন */}
       <View style={styles.cutLineContainer}>
         <Text style={styles.cutLineText}>
-          {"✂ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"}
+          {"✂ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"}
         </Text>
       </View>
     </Page>
   </Document>
 );
 
-// ৪. ওয়ান-ক্লিক লাইভ প্রিভিউ এবং ডাউনলোড বাটন কম্পোনেন্ট
-export function SalarySlipDownloadButton({ data }: SalarySlipProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [printDate, setPrintDate] = useState('24-06-2026'); // Hydration সেফ ফলব্যাক
-  const [instance, updateInstance] = usePDF({ 
-    document: <SalarySlipDocument data={data} printDate={printDate} /> 
+// ৪. (Sprint 1) Lazy PDF wrapper – usePDF only mounts when this is rendered (i.e. inside modal)
+interface LazyPDFWrapperProps {
+  data: SalarySlipProps['data'];
+  printDate: string;
+  onReady: (url: string | null) => void;
+}
+
+function LazyPDFWrapper({ data, printDate, onReady }: LazyPDFWrapperProps) {
+  const [instance, updateInstance] = usePDF({
+    document: <SalarySlipDocument data={data} printDate={printDate} />,
   });
 
-  // রিয়াল-টাইম আজকের তারিখ ডাইনামিক সেটআপ (Next.js 15-এর কড়া Rule #1 মেনে মাইক্রো-টাস্ক ডিফারেল সহ)
+  useEffect(() => {
+    if (!instance.loading && instance.url) {
+      onReady(instance.url);
+    }
+  }, [instance.loading, instance.url, onReady]);
+
+  return null; // We don't render anything here; parent handles UI
+}
+
+// ৫. ওয়ান-ক্লিক লাইভ প্রিভিউ এবং ডাউনলোড বাটন কম্পোনেন্ট (LAZY LOADED)
+export function SalarySlipDownloadButton({ data }: SalarySlipProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [printDate, setPrintDate] = useState('24-06-2026');
+  const [isActivated, setIsActivated] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+
+  // (Sprint 1) PDF compilation only happens when isActivated is true (modal is open)
+  const activatePdf = useCallback(() => {
+    setIsActivated(true);
+    setIsOpen(true);
+    setPdfUrl(null);
+  }, []);
+
+  const deactivatePdf = useCallback(() => {
+    setIsActivated(false);
+    setIsOpen(false);
+    setPdfUrl(null);
+  }, []);
+
+  // রিয়াল-টাইম আজকের তারিখ ডাইনামিক সেটআপ (Next.js 15-এর কড়া Rule #1)
   useEffect(() => {
     let active = true;
     (async () => {
-      await Promise.resolve(); // 🌟 রেন্ডার ক্যাস্কেডিং ও বিল্ড ফেল প্রতিরোধক মাইক্রো-টাস্ক টিক
+      await Promise.resolve();
       if (active) {
         const now = new Date();
         const d = String(now.getDate()).padStart(2, '0');
@@ -326,161 +358,145 @@ export function SalarySlipDownloadButton({ data }: SalarySlipProps) {
     };
   }, []);
 
-  // ডাটা পরিবর্তন হলে পিডিএফ আপডেট করা হবে (অ্যাসিনক্রোনাস মাইক্রো-টাস্ক টিক)
-  useEffect(() => {
-    let active = true;
-    (async () => {
-      await Promise.resolve();
-      if (active) {
-        updateInstance(<SalarySlipDocument data={data} printDate={printDate} />);
-      }
-    })();
-    return () => {
-      active = false;
-    };
-  }, [data, printDate, updateInstance]);
-
   const fileName = `Salary-Slip-${data.employeeCode}-${data.month}-${data.year}.pdf`;
 
-  if (instance.loading) {
+  // (Sprint 1) Lightweight mock button in the table row – NO PDF compilation on mount
+  if (!isOpen) {
     return (
-      <button className="inline-flex items-center gap-1.5 rounded-lg bg-gray-200 text-gray-500 px-3.5 py-2 text-sm font-black cursor-not-allowed">
-        <Printer className="h-4 w-4 animate-pulse" />
-        <span>{"রসিদ লোড..."}</span>
-      </button>
-    );
-  }
-
-  return (
-    <>
-      {/* মেইন টেবিলের বাটন */}
       <button
-        onClick={() => setIsOpen(true)}
+        onClick={activatePdf}
         className="inline-flex items-center gap-1.5 rounded-lg bg-[#8B0000] hover:bg-[#8B0000]/90 text-white px-3.5 py-2 text-sm font-black transition-colors cursor-pointer"
       >
         <Printer className="h-4 w-4 text-[#F4C430]" />
         <span>{"রসিদ প্রিন্ট"}</span>
       </button>
+    );
+  }
 
-      {/* লাইভ প্রিন্ট প্রিভিউ উইন্ডো (Modal) */}
-      {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
-          <div className="w-full max-w-3xl rounded-xl bg-white p-5 shadow-2xl space-y-4 border border-gray-100 animate-in fade-in zoom-in-95 duration-150">
-            {/* মডাল হেডার */}
-            <div className="flex items-center justify-between border-b pb-3">
-              <div>
-                <h3 className="text-lg font-black text-gray-900">{"বেতন রসিদ প্রিভিউ (ভাউচার সাইজ)"}</h3>
-                <p className="text-xs font-bold text-gray-500">{"রসিদ সঠিক আছে কিনা দেখে নিন। স্ক্রিনশট নিয়ে হোয়াটসঅ্যাপেও পাঠাতে পারেন।"}</p>
-              </div>
-              <button 
-                onClick={() => setIsOpen(false)}
-                className="rounded-lg p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 cursor-pointer"
-              >
-                <X className="h-5 w-5" />
-              </button>
+  // Modal opens with LazyPDFWrapper – usePDF runs ONLY here
+  return (
+    <>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+        <div className="w-full max-w-3xl rounded-xl bg-white p-5 shadow-2xl space-y-4 border border-gray-100 animate-in fade-in zoom-in-95 duration-150">
+          {/* মডাল হেডার */}
+          <div className="flex items-center justify-between border-b pb-3">
+            <div>
+              <h3 className="text-lg font-black text-gray-900">{"বেতন রসিদ প্রিভিউ (ভাউচার সাইজ)"}</h3>
+              <p className="text-xs font-bold text-gray-500">{"রসিদ সঠিক আছে কিনা দেখে নিন। স্ক্রিনশট নিয়ে হোয়াটসঅ্যাপেও পাঠাতে পারেন।"}</p>
             </div>
+            <button
+              onClick={deactivatePdf}
+              className="rounded-lg p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 cursor-pointer"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
 
-            {/* মোবাইল ফ্রেন্ডলি ও রেসপন্সিভ রিঅ্যাক্ট এইচটিএমএল প্রিভিউ */}
-            <div className="bg-gray-50 rounded-lg border p-4 shadow-inner overflow-x-auto max-w-full font-sans select-none">
-              <div className="min-w-[640px] border border-gray-200 rounded-xl p-4 bg-white relative space-y-4 shadow-sm">
-                
-                {/* প্রিভিউ হেডার */}
-                <div className="flex justify-between items-center border-b-2 border-[#8B0000] pb-2">
-                  <span className="text-xl font-bold text-[#8B0000]">{"বিসমিল্লাহ"}</span>
-                  <span className="text-sm font-bold text-gray-500">{"বেতন পরিশোধের রসিদ (ভাউচার)"}</span>
+          {/* PDF compilation only runs when modal is open (isActivated = true) */}
+          {isActivated && (
+            <LazyPDFWrapper data={data} printDate={printDate} onReady={setPdfUrl} />
+          )}
+
+          {/* মোবাইল ফ্রেন্ডলি ও রেসপন্সিভ রিঅ্যাকট এইচটিএমএল প্রিভিউ */}
+          <div className="bg-gray-50 rounded-lg border p-4 shadow-inner overflow-x-auto max-w-full font-sans select-none">
+            <div className="min-w-[640px] border border-gray-200 rounded-xl p-4 bg-white relative space-y-4 shadow-sm">
+
+              {/* প্রিভিউ হেডার */}
+              <div className="flex justify-between items-center border-b-2 border-[#8B0000] pb-2">
+                <span className="text-xl font-bold text-[#8B0000]">{"বিসমিল্লাহ"}</span>
+                <span className="text-sm font-bold text-gray-500">{"বেতন পরিশোধের রসিদ (ভাউচার)"}</span>
+              </div>
+
+              {/* ৩-কলাম গ্রিড লেআউট */}
+              <div className="grid grid-cols-3 gap-3 text-xs">
+                {/* কলাম ১: কর্মচারীর বিবরণ */}
+                <div className="border border-gray-150 rounded-lg p-3 bg-gray-50">
+                  <div className="bg-[#8B0000] text-white py-1.5 text-center font-bold rounded-md mb-2">{"কর্মচারির বিবরণ"}</div>
+                  <div className="space-y-1 font-semibold text-gray-700">
+                    <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"কোড:"}</span><span className="font-bold">{data.employeeCode}</span></div>
+                    <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"নাম:"}</span><span className="font-bold">{data.employeeName}</span></div>
+                    <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"ক্যাটাগরি:"}</span><span className="font-bold">{data.categoryName}</span></div>
+                  </div>
                 </div>
 
-                {/* ৩-কলাম গ্রিড লেআউট */}
-                <div className="grid grid-cols-3 gap-3 text-xs">
-                  {/* কলাম ১: কর্মচারীর বিবরণ (শাখা বাদ দেওয়া হয়েছে) */}
-                  <div className="border border-gray-150 rounded-lg p-3 bg-gray-50">
-                    <div className="bg-[#8B0000] text-white py-1.5 text-center font-bold rounded-md mb-2">{"কর্মচারির বিবরণ"}</div>
-                    <div className="space-y-1 font-semibold text-gray-700">
-                      <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"কোড:"}</span><span className="font-bold">{data.employeeCode}</span></div>
-                      <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"নাম:"}</span><span className="font-bold">{data.employeeName}</span></div>
-                      <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"ক্যাটাগরি:"}</span><span className="font-bold">{data.categoryName}</span></div>
-                    </div>
+                {/* কলাম ২: হাজিরা বিবরণী */}
+                <div className="border border-gray-150 rounded-lg p-3 bg-gray-50">
+                  <div className="bg-[#8B0000] text-white py-1.5 text-center font-bold rounded-md mb-2">{"হাজিরা বিবরণী"}</div>
+                  <div className="space-y-1 font-semibold text-gray-700">
+                    <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"বেতন মাস:"}</span><span className="font-bold">{`${data.month}-${data.year}`}</span></div>
+                    <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"উপস্থিত দিন:"}</span><span className="font-bold">{`${data.dutyDays} দিন`}</span></div>
+                    <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"অনুপস্থিত দিন:"}</span><span className="font-bold">{`${data.absentDays} দিন`}</span></div>
+                    <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"বোনাস দিন:"}</span><span className="font-bold">{`+${data.bonusDays} দিন`}</span></div>
                   </div>
+                </div>
 
-                  {/* কলাম ২: হাজিরা বিবরণী */}
-                  <div className="border border-gray-150 rounded-lg p-3 bg-gray-50">
-                    <div className="bg-[#8B0000] text-white py-1.5 text-center font-bold rounded-md mb-2">{"হাজিরা বিবরণী"}</div>
-                    <div className="space-y-1 font-semibold text-gray-700">
-                      <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"বেতন মাস:"}</span><span className="font-bold">{`${data.month}-${data.year}`}</span></div>
-                      <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"উপস্থিত দিন:"}</span><span className="font-bold">{`${data.dutyDays} দিন`}</span></div>
-                      <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"অনুপস্থিত দিন:"}</span><span className="font-bold">{`${data.absentDays} দিন`}</span></div>
-                      <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"বোনাস দিন:"}</span><span className="font-bold">{`+${data.bonusDays} দিন`}</span></div>
+                {/* কলাম ৩: বেতন ও সমন্বয় */}
+                <div className="border border-gray-150 rounded-lg p-3 bg-gray-50">
+                  <div className="bg-[#8B0000] text-white py-1.5 text-center font-bold rounded-md mb-2">{"বেতন ও সমন্বয়"}</div>
+                  <div className="space-y-1 font-semibold text-gray-700">
+                    <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"মূল বেতন:"}</span><span className="font-bold">{formatCurrency(data.monthlySalary)} {"টাকা"}</span></div>
+                    <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"প্রাপ্য বেতন:"}</span><span className="font-bold">{formatCurrency(data.grossSalary)} {"টাকা"}</span></div>
+                    <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"অগ্রিম (-):"}</span><span className="font-bold">-{formatCurrency(data.advanceAmount)} {"টাকা"}</span></div>
+                    <div className="bg-[#F4C430] text-black font-bold p-1.5 rounded-md flex justify-between mt-2">
+                      <span>{"নিট বেতন:"}</span>
+                      <span className="text-[#8B0000]">{formatCurrency(data.netSalary)} {"টাকা"}</span>
                     </div>
-                  </div>
 
-                  {/* কলাম ৩: বেতন ও সমন্বয় */}
-                  <div className="border border-gray-150 rounded-lg p-3 bg-gray-50">
-                    <div className="bg-[#8B0000] text-white py-1.5 text-center font-bold rounded-md mb-2">{"বেতন ও সমন্বয়"}</div>
-                    <div className="space-y-1 font-semibold text-gray-700">
-                      <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"মূল বেতন:"}</span><span className="font-bold">{formatCurrency(data.monthlySalary)} {"টাকা"}</span></div>
-                      <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"প্রাপ্য বেতন:"}</span><span className="font-bold">{formatCurrency(data.grossSalary)} {"টাকা"}</span></div>
-                      <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"অগ্রিম (-):"}</span><span className="font-bold">-{formatCurrency(data.advanceAmount)} {"টাকা"}</span></div>
-                      <div className="bg-[#F4C430] text-black font-bold p-1.5 rounded-md flex justify-between mt-2">
-                        <span>{"নিট বেতন:"}</span>
-                        <span className="text-[#8B0000]">{formatCurrency(data.netSalary)} {"টাকা"}</span>
-                      </div>
-
-                      {/* পেমেন্ট স্ট্যাটাস ব্যাজ */}
-                      {data.is_paid && (
-                        <div className="mt-2 bg-green-100 text-green-700 font-bold p-1.5 rounded-md flex items-center justify-between text-[11px]">
-                          <span className="flex items-center gap-1">
-                            <CheckCircle2 className="h-3.5 w-3.5" />
-                            {"পরিশোধিত"}
+                    {/* পেমেন্ট স্ট্যাটাস ব্যাজ */}
+                    {data.is_paid && (
+                      <div className="mt-2 bg-green-100 text-green-700 font-bold p-1.5 rounded-md flex items-center justify-between text-[11px]">
+                        <span className="flex items-center gap-1">
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                          {"পরিশোধিত"}
+                        </span>
+                        {data.paid_at && (
+                          <span className="text-gray-500 font-semibold">
+                            {formatPaymentDate(data.paid_at)}
                           </span>
-                          {data.paid_at && (
-                            <span className="text-gray-500 font-semibold">
-                              {formatPaymentDate(data.paid_at)}
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
-
-                {/* স্বাক্ষর লাইন */}
-                <div className="flex justify-between pt-6 px-6 text-xs text-center font-bold">
-                  <div className="w-[35%] border-t border-black pt-1">{"কর্মচারীর স্বাক্ষর"}</div>
-                  <div className="w-[35%] border-t border-black pt-1">{"কর্তৃপক্ষের স্বাক্ষর"}</div>
-                </div>
-
-                {/* ফুটার (ডাইনামিক মুদ্রণ তারিখ সহ) */}
-                <div className="text-[10px] text-gray-400 text-center border-t border-gray-100 pt-2 font-semibold">
-                  <p>{"* এই স্লিপটি বিসমিল্লাহ প্রতিষ্ঠানের অভ্যন্তরীণ ব্যবহারের জন্য তৈরি।"}</p>
-                  <p>{"মুদ্রণের তারিখ: "}{printDate}</p>
-                </div>
-
               </div>
-            </div>
 
-            {/* অ্যাকশন বাটনসমূহ */}
-            <div className="flex flex-col sm:flex-row gap-3 pt-3 border-t">
-              <button 
-                onClick={() => setIsOpen(false)}
-                className="flex-1 rounded-lg border py-3 text-sm font-black text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer text-center"
-              >
-                {"বাতিল করুন"}
-              </button>
-              
-              {instance.url && (
-                <a
-                  href={instance.url}
-                  download={fileName}
-                  className="flex-1 rounded-lg bg-[#8B0000] hover:bg-[#8B0000]/90 text-white py-3 text-sm font-black transition-colors cursor-pointer text-center flex items-center justify-center gap-1.5"
-                >
-                  <Download className="h-4 w-4 text-[#F4C430]" />
-                  <span>{"ফাইল ডাউনলোড করুন"}</span>
-                </a>
-              )}
+              {/* স্বাক্ষর লাইন */}
+              <div className="flex justify-between pt-6 px-6 text-xs text-center font-bold">
+                <div className="w-[35%] border-t border-black pt-1">{"কর্মচারীর স্বাক্ষর"}</div>
+                <div className="w-[35%] border-t border-black pt-1">{"কর্তৃপক্ষের স্বাক্ষর"}</div>
+              </div>
+
+              {/* ফুটার */}
+              <div className="text-[10px] text-gray-400 text-center border-t border-gray-100 pt-2 font-semibold">
+                <p>{"* এই স্লিপটি বিসমিল্লাহ প্রতিষ্ঠানের অভ্যন্তরীণ ব্যবহারের জন্য তৈরি।"}</p>
+                <p>{"মুদ্রণের তারিখ: "}{printDate}</p>
+              </div>
+
             </div>
           </div>
+
+          {/* অ্যাকশন বাটনসমূহ */}
+          <div className="flex flex-col sm:flex-row gap-3 pt-3 border-t">
+            <button
+              onClick={deactivatePdf}
+              className="flex-1 rounded-lg border py-3 text-sm font-black text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer text-center"
+            >
+              {"বাতিল করুন"}
+            </button>
+
+            {pdfUrl && (
+              <a
+                href={pdfUrl}
+                download={fileName}
+                className="flex-1 rounded-lg bg-[#8B0000] hover:bg-[#8B0000]/90 text-white py-3 text-sm font-black transition-colors cursor-pointer text-center flex items-center justify-center gap-1.5"
+              >
+                <Download className="h-4 w-4 text-[#F4C430]" />
+                <span>{"ফাইল ডাউনলোড করুন"}</span>
+              </a>
+            )}
+          </div>
         </div>
-      )}
+      </div>
     </>
   );
 }

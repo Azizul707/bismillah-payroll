@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, Suspense } from 'react';
 import {
   CreditCard,
   Lock,
@@ -17,6 +17,35 @@ import { db } from '@/app/lib/supabase/client';
 import { Payroll, PayrollItem } from '@/app/lib/supabase/types';
 import { PayrollService } from '@/app/lib/services/payroll';
 import { SalarySlipDownloadButton } from '@/components/salary-slip-pdf';
+
+// ---- Sprint 3: Module-level cache for categories (fetched once, reused on remount) ----
+type CategoryCache = { data: { id: string; category_name: string }[]; promise: Promise<void> | null };
+const categoryCache: CategoryCache = { data: [], promise: null };
+
+async function fetchCategoriesOnce(): Promise<{ id: string; category_name: string }[]> {
+  if (categoryCache.data.length > 0) return categoryCache.data;
+  if (categoryCache.promise) {
+    await categoryCache.promise;
+    return categoryCache.data;
+  }
+  categoryCache.promise = (async () => {
+    try {
+      const { data, error } = await db.categories()
+        .select('id, category_name')
+        .eq('is_deleted', false)
+        .order('category_name', { ascending: true });
+      if (!error && data) {
+        categoryCache.data = data as { id: string; category_name: string }[];
+      }
+    } catch (err) {
+      console.error('Category cache fetch failed:', err);
+    } finally {
+      categoryCache.promise = null;
+    }
+  })();
+  await categoryCache.promise;
+  return categoryCache.data;
+}
 
 // পেমেন্ট তারিখ ফরম্যাটার
 function formatPaymentDate(isoString: string | null): string {
@@ -56,7 +85,6 @@ export default function PayrollPage() {
   const [selectedYear, setSelectedYear] = useState('2026');   // ২০২৬
   const [payroll, setPayroll] = useState<Payroll | null>(null);
   const [payrollItems, setPayrollItems] = useState<ExtendedPayrollItem[]>([]);
-  const [categoriesList, setCategoriesList] = useState<{ id: string; category_name: string }[]>([]);
   
   // অনুসন্ধান ও ফিল্টার স্টেট
   const [searchTerm, setSearchTerm] = useState('');
@@ -94,16 +122,12 @@ export default function PayrollPage() {
   // বছরের তালিকা (২০২৬ সাল থেকে শুরু)
   const years = ['2026', '2027', '2028'];
 
-  // ক্যাটাগরি তালিকা লোড করার মেমোইজড ফাংশন
+  // ক্যাটাগরি তালিকা লোড করার মেমোইজড ফাংশন (Sprint 3: module-level cache)
   const loadCategoriesData = useCallback(async () => {
     await Promise.resolve(); // Next.js 15 বিল্ড এরর মুক্ত রাখতে
     try {
-      const { data, error } = await db.categories()
-        .select('id, category_name')
-        .eq('is_deleted', false);
-      if (!error && data) {
-        setCategoriesList(data as { id: string; category_name: string }[]);
-      }
+      // Module-level cache — avoids redundant DB queries on remount
+      await fetchCategoriesOnce();
     } catch (err) {
       console.error('Error loading categories:', err);
     }
@@ -413,7 +437,7 @@ export default function PayrollPage() {
               className="w-full rounded-lg border border-gray-200 p-2.5 font-bold text-gray-700 focus:outline-none focus:border-[#8B0000] text-sm"
             >
               <option value="all">{"সকল ক্যাটাগরি"}</option>
-              {categoriesList.map((cat) => (
+              {categoryCache.data.map((cat) => (
                 <option key={cat.id} value={cat.category_name}>
                   {cat.category_name}
                 </option>
@@ -448,7 +472,39 @@ export default function PayrollPage() {
       )}
 
       {/* পে-রোল বিস্তারিত টেবিল */}
-      {loading ? (
+      <Suspense fallback={
+        <div className="rounded-xl border border-gray-100 bg-white shadow-sm overflow-hidden">
+          <table className="w-full border-collapse text-left">
+            <thead>
+              <tr className="border-b bg-gray-50 text-sm font-black text-gray-700">
+                <th className="p-4">{"কোড ও নাম"}</th>
+                <th className="p-4">{"মূল বেতন"}</th>
+                <th className="p-4">{"দৈনিক বেতন"}</th>
+                <th className="p-4">{"উপস্থিত দিন"}</th>
+                <th className="p-4">{"অনুপস্থিত দিন"}</th>
+                <th className="p-4">{"বোনাস দিন"}</th>
+                <th className="p-4">{"মোট (Gross)"}</th>
+                <th className="p-4">{"অগ্রিম সমন্বয়"}</th>
+                <th className="p-4 font-black text-[#8B0000]">{"নিট বেতন"}</th>
+                <th className="p-4 text-center">{"পরিশোধ"}</th>
+                <th className="p-4 text-center">{"রসিদ"}</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y text-base font-bold text-gray-800">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <tr key={i} className="animate-pulse">
+                  {Array.from({ length: 11 }).map((_, j) => (
+                    <td key={j} className="p-4">
+                      <div className="h-4 bg-gray-100 rounded w-full" />
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      }>
+        {loading ? (
         <div className="text-center py-12">
           <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#8B0000] border-t-transparent mx-auto"></div>
           <p className="mt-4 font-bold text-gray-500">{"তথ্য খোঁজা হচ্ছে..."}</p>
@@ -562,6 +618,7 @@ export default function PayrollPage() {
           </table>
         </div>
       )}
+      </Suspense>
 
       {/* ========================================== */}
       {/* আনলক করার পপআপ মডাল (Unlock Modal) */}

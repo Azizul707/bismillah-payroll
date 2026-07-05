@@ -1,5 +1,5 @@
 import { db } from '@/app/lib/supabase/client';
-import { Payroll, PayrollItem, EmployeeStatusHistory } from '@/app/lib/supabase/types';
+import { Payroll, PayrollItem, EmployeeStatusHistory, SalaryAdvance } from '@/app/lib/supabase/types';
 import { AuditService } from './audit';
 
 export class PayrollService {
@@ -10,7 +10,8 @@ export class PayrollService {
     employeeId: string,
     joiningDate: string,
     month: string, // '01' - '12'
-    year: string   // '2026'
+    year: string,  // '2026'
+    preFetchedHistory?: EmployeeStatusHistory[]
   ): Promise<{ dutyDays: number; absentDays: number }> {
     const startOfMonth = new Date(`${year}-${month}-01`);
     const endOfMonth = new Date(parseInt(year, 10), parseInt(month, 10), 0);
@@ -18,20 +19,25 @@ export class PayrollService {
 
     // কর্মচারীর যোগদানের তারিখ এবং মাসের দিনগুলোর তুলনা করা
     const joinDateObj = new Date(joiningDate);
-    
+
     // ১. কর্মচারী যদি এই মাসের পর জয়েন করেন, তবে ডিউটি দিন ০
     if (joinDateObj > endOfMonth) {
       return { dutyDays: 0, absentDays: 30 };
     }
 
-    // ২. কর্মচারীর স্ট্যাটাস হিস্ট্রি বা টাইমলাইন আনা
-    const { data: timelineData, error } = await db.employee_status_history()
-      .select('*')
-      .eq('employee_id', employeeId)
-      .order('start_date', { ascending: true });
+    // ২. (Sprint 2)าย ফেচ করা হিস্ট্রি ব্যবহার করা হবে, নাহলে আলাদা কোয়েরি করা হবে
+    let history: EmployeeStatusHistory[];
+    if (preFetchedHistory && preFetchedHistory.length > 0) {
+      history = preFetchedHistory;
+    } else {
+      const { data: timelineData, error } = await db.employee_status_history()
+        .select('*')
+        .eq('employee_id', employeeId)
+        .order('start_date', { ascending: true });
 
-    if (error) throw error;
-    const history = (timelineData as unknown as EmployeeStatusHistory[]) || [];
+      if (error) throw error;
+      history = (timelineData as unknown as EmployeeStatusHistory[]) || [];
+    }
 
     let absentDays = 0;
     let missedDaysDueToJoining = 0;
@@ -85,7 +91,7 @@ export class PayrollService {
   }
 
   /**
-   * নির্দিষ্ট মাসের বেতন হিসেব জেনারেট করা
+   * নির্দিষ্ট মাসের বেতন হিসেব জেনারেট করা (Sprint 2: batch queries)
    */
   static async generateMonthlyPayroll(
     month: string,
@@ -137,11 +143,35 @@ export class PayrollService {
 
     if (empError) throw empError;
 
-    // ৫. প্রতিটি কর্মচারীর বেতন হিসাব করা
+    // ৫. (Sprint 2) সব কর্মচারীদের জন্য স্ট্যাটাস হিস্ট্রি এআর এ অ compulsori bulk fetch
+    const employeeIds = (employees || []).map(e => e.id);
+    const { data: allHistory, error: historyError } = await db.employee_status_history()
+      .select('*')
+      .in('employee_id', employeeIds);
+
+    if (historyError) throw historyError;
+
+    // ৬. (Sprint 2) সব কর্মচারীদের জন্য অগ্রিম টেবিল থেকে একসাথে bulk fetch
+    const { data: advData, error: advError } = await db.salary_advances()
+      .select('*')
+      .eq('advance_month', month)
+      .eq('advance_year', year)
+      .eq('is_deleted', false);
+
+    if (advError) throw advError;
+    const allAdvances = (advData as SalaryAdvance[]) || [];
+
+    // ৭. প্রতিটি কর্মচারীর বেতন হিসাব করা (in-memory filtering)
     for (const emp of employees) {
-      // ক. ডিউটি এবং অনুপস্থিত দিন হিসেব
-      const { dutyDays, absentDays } = await this.calculateDutyDays(emp.id, emp.joining_date, month, year);
-      
+      // ক. ডিউটি এবং অনুপস্থিত দিন হিসেব (pre-fetched history pass করা হয়েছে)
+      const { dutyDays, absentDays } = await this.calculateDutyDays(
+        emp.id,
+        emp.joining_date,
+        month,
+        year,
+        (allHistory as unknown as EmployeeStatusHistory[]) || []
+      );
+
       // খ. বোনাস দিন হিসেব
       const bonusDays = this.calculateBonusDays(dutyDays);
 
@@ -152,16 +182,9 @@ export class PayrollService {
       const payableDays = dutyDays + bonusDays;
       const grossSalary = dailySalary * payableDays;
 
-      // ঙ. এই মাসের অগ্রিম বেতনের পরিমাণ বের করা
-      const { data: advances, error: advError } = await db.salary_advances()
-        .select('amount')
-        .eq('employee_id', emp.id)
-        .eq('advance_month', month)
-        .eq('advance_year', year)
-        .eq('is_deleted', false);
-
-      if (advError) throw advError;
-      const totalAdvance = (advances || []).reduce((acc, curr) => acc + Number(curr.amount), 0);
+      // ঙ. (Sprint 2) in-memory advance filtering (no extra DB round-trip)
+      const empAdvances = allAdvances.filter(adv => adv.employee_id === emp.id);
+      const totalAdvance = empAdvances.reduce((acc, curr) => acc + Number(curr.amount), 0);
 
       // চ. নিট বেতন (Net Salary = Gross Salary − Advance Amount)
       const netSalary = Math.max(0, grossSalary - totalAdvance);
@@ -183,7 +206,7 @@ export class PayrollService {
       if (itemInsertError) throw itemInsertError;
     }
 
-    // জ. অডিট লগ তৈরি
+    // ৮. অডিট লগ তৈরি
     await AuditService.logChange({
       tableName: 'payrolls',
       recordId: payrollId,
