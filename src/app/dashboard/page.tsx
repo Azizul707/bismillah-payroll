@@ -1,11 +1,13 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { 
-  Users, 
-  CheckCircle, 
-  CalendarX, 
-  DollarSign 
+import {
+  Users,
+  UserCheck,
+  CalendarX,
+  Banknote,
+  Sparkles,
+  RefreshCw,
 } from 'lucide-react';
 import { db } from '@/app/lib/supabase/client';
 
@@ -25,20 +27,6 @@ interface LeaveEmployeeInfo {
   daysOnLeave: number;
 }
 
-// সুপাবেস ডাটাবেস কুয়েরির জয়েন রেসপন্সকে টাইপ-সেফ করতে সুনির্দিষ্ট ইন্টারফেস
-interface SupabaseLeaveEmployee {
-  id: string;
-  full_name: string;
-  categories: {
-    category_name: string;
-  } | null;
-  employee_status_history: {
-    start_date: string;
-    status: string;
-  }[] | null;
-}
-
-// তারিখ সুন্দর করে ফরম্যাট করার হেল্পার ফাংশন (YYYY-MM-DD -> DD-MM-YYYY)
 function formatDate(dateStr: string) {
   if (!dateStr) return '';
   const [year, month, day] = dateStr.split('-');
@@ -47,7 +35,6 @@ function formatDate(dateStr: string) {
 }
 
 export default function DashboardPage() {
-  // ডাইনামিক তারিখ, মাস এবং বছরের স্টেটসমূহ (Hydration সেফ ফলব্যাক সহ)
   const [currentMonth, setCurrentMonth] = useState('06');
   const [currentYear, setCurrentYear] = useState('2026');
   const [formattedToday, setFormattedToday] = useState('24-06-2026');
@@ -60,23 +47,21 @@ export default function DashboardPage() {
     totalAdvancesThisMonth: 0,
     estimatedSalaryThisMonth: 0,
   });
-  
+
   const [leaveList, setLeaveList] = useState<LeaveEmployeeInfo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  // কারেন্সি কমা সেপারেটর ফরম্যাটার
   const formatCurrency = (amount: number | string) => {
     const num = Number(amount);
     return isNaN(num) ? '0' : num.toLocaleString('en-US');
   };
 
-  // ড্যাশবোর্ডের ডেটা লোড করার নিরাপদ মেমোইজড ফাংশন
   const loadDashboardData = useCallback(async () => {
-    await Promise.resolve(); // সিনক্রোনাস রেন্ডার এরর দূর করতে মাইক্রো-টাস্ক টিক
+    await Promise.resolve();
     try {
       setLoading(true);
 
-      // ১. মোট কর্মচারী সংখ্যা (সফট ডিলিট বাদে)
       const { data: employees, error: empError } = await db.employees()
         .select('id, status, monthly_salary')
         .eq('is_deleted', false);
@@ -86,7 +71,6 @@ export default function DashboardPage() {
       const activeEmp = employees?.filter(e => e.status === 'active').length || 0;
       const leaveEmp = employees?.filter(e => e.status === 'leave').length || 0;
 
-      // ২. চলতি মাসের মোট অগ্রিম (ডাইনামিক মাস ও বছরের ওপর ভিত্তি করে)
       const { data: advances, error: advError } = await db.salary_advances()
         .select('amount')
         .eq('advance_month', currentMonth)
@@ -95,8 +79,6 @@ export default function DashboardPage() {
       if (advError) throw advError;
 
       const totalAdvances = (advances || []).reduce((sum, item) => sum + Number(item.amount), 0);
-
-      // ৩. চলতি মাসের আনুমানিক মোট বেসিক স্যালারি বাজেট
       const totalSalaryBudget = (employees || []).reduce((sum, item) => sum + Number(item.monthly_salary), 0);
 
       setStats({
@@ -107,7 +89,6 @@ export default function DashboardPage() {
         estimatedSalaryThisMonth: totalSalaryBudget,
       });
 
-      // ৪. বর্তমানে যারা ছুটিতে আছেন তাদের ক্যাটাগরি ও স্ট্যাটাস হিস্টোরি সহ তথ্য কুয়েরি করা
       const { data: leaveEmployeesData, error: leaveErr } = await db.employees()
         .select(`
           id,
@@ -125,16 +106,19 @@ export default function DashboardPage() {
 
       if (leaveErr) throw leaveErr;
 
-      const typedLeaveData = leaveEmployeesData as unknown as SupabaseLeaveEmployee[];
+      const typedLeaveData = leaveEmployeesData as unknown as {
+        id: string;
+        full_name: string;
+        categories: { category_name: string } | null;
+        employee_status_history: { start_date: string; status: string }[] | null;
+      }[];
 
-      // ছুটির সময়কাল ডাইনামিকভাবে আজকের আসল তারিখ অনুযায়ী হিসাব করা
       const parsedLeaves: LeaveEmployeeInfo[] = (typedLeaveData || []).map((emp) => {
         const leaveHistory = (emp.employee_status_history || [])
           .filter((h) => h.status === 'leave')
           .sort((a, b) => new Date(b.start_date).getTime() - new Date(a.start_date).getTime());
-        
+
         const startDate = leaveHistory[0]?.start_date || new Date().toISOString().split('T')[0];
-        
         const today = new Date();
         const startDateObj = new Date(startDate);
         const diffTime = today.getTime() - startDateObj.getTime();
@@ -145,8 +129,8 @@ export default function DashboardPage() {
           id: emp.id,
           fullName: emp.full_name,
           categoryName: emp.categories?.category_name || 'N/A',
-          startDate: startDate,
-          daysOnLeave: daysOnLeave,
+          startDate,
+          daysOnLeave,
         };
       });
 
@@ -159,34 +143,30 @@ export default function DashboardPage() {
     }
   }, [currentMonth, currentYear]);
 
-  // আজকের রিয়েল তারিখ ও মাস ডাইনামিক সেটআপ (Next.js 15-এর কড়া Rule #1 মেনে মাইক্রো-টাস্ক ডিফারেল সহ)
   useEffect(() => {
     let active = true;
     (async () => {
-      await Promise.resolve(); // 🌟 রেন্ডার ক্যাস্কেডিং ও বিল্ড ফেল প্রতিরোধক মাইক্রো-টাস্ক টিক
+      await Promise.resolve();
       if (active) {
         const now = new Date();
         const d = String(now.getDate()).padStart(2, '0');
         const m = String(now.getMonth() + 1).padStart(2, '0');
         const y = String(now.getFullYear());
-        
+
         const monthsList = [
-          'জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 
+          'জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন',
           'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'
         ];
-        
+
         setFormattedToday(`${d}-${m}-${y}`);
         setCurrentMonth(m);
         setCurrentYear(y);
         setMonthName(monthsList[now.getMonth()]);
       }
     })();
-    return () => {
-      active = false;
-    };
+    return () => { active = false; };
   }, []);
 
-  // ডাইনামিক তারিখের পর ডেটা লোড নিশ্চিতকরণ
   useEffect(() => {
     let active = true;
     (async () => {
@@ -194,146 +174,146 @@ export default function DashboardPage() {
         await loadDashboardData();
       }
     })();
-    return () => {
-      active = false;
-    };
+    return () => { active = false; };
   }, [loadDashboardData]);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await loadDashboardData();
+    setRefreshing(false);
+  };
 
   if (loading) {
     return (
       <div className="flex h-[60vh] items-center justify-center">
         <div className="text-center">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#8B0000] border-t-transparent mx-auto"></div>
-          <p className="mt-4 text-lg font-bold text-gray-700">{"তথ্য লোড করা হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন..."}</p>
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-[--color-primary] border-t-transparent mx-auto" />
+          <p className="mt-4 text-base font-semibold text-[--color-foreground-muted]">{"তথ্য লোড করা হচ্ছে..."}</p>
         </div>
       </div>
     );
   }
 
+  const metrics = [
+    { label: 'মোট কর্মচারী', labelEn: 'Total Employees', value: stats.totalEmployees, suffix: 'জন', icon: Users, color: 'text-[--color-primary]', bg: 'bg-[--color-primary]/[0.08]' },
+    { label: 'সক্রিয় কর্মচারী', labelEn: 'Active Staff', value: stats.activeEmployees, suffix: 'জন', icon: UserCheck, color: 'text-[--color-success]', bg: 'bg-green-50' },
+    { label: 'ছুটিতে', labelEn: 'On Leave', value: stats.leaveEmployees, suffix: 'জন', icon: CalendarX, color: 'text--color-warning', bg: 'bg-amber-50' },
+    { label: `চলতি মাসের অগ্রিম`, labelEn: 'This Month Advances', value: formatCurrency(stats.totalAdvancesThisMonth), suffix: 'টাকা', icon: Banknote, color: 'text-amber-700', bg: 'bg-amber-50', isCurrency: true },
+    { label: 'আনুমানিক বেতন বাজেট', labelEn: 'Est. Payroll Budget', value: formatCurrency(stats.estimatedSalaryThisMonth), suffix: 'টাকা', icon: Banknote, color: 'text-[--color-primary]', bg: 'bg-[--color-primary]/[0.06]', isCurrency: true },
+    { label: 'AI পরামর্শ', labelEn: 'AI Insights', value: '৩', suffix: '', icon: Sparkles, color: 'text-purple-600', bg: 'bg-purple-50' },
+  ];
+
   return (
-    <div className="space-y-6 font-normal">
-      {/* হেডার সেকশন */}
-      <div className="border-b pb-4">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-800">{"স্বাগতম, বিসমিল্লাহ ড্যাশবোর্ড"}</h1>
-        <p className="text-sm md:text-base font-semibold text-gray-500 mt-1">
-          {"আজকের তারিখ: "}{formattedToday}{" | চলতি মাসের হিসাব ("}{monthName}{" "}{currentYear}{")"}
-        </p>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-[--color-foreground-muted] font-body mb-1">{"আজকের সারাংশ"}</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-[--color-foreground] font-bengali">{"ড্যাশবোর্ড"}</h1>
+          <p className="text-sm text-[--color-foreground-muted] mt-1">
+            {"আজ: "}{formattedToday}{" | "}{monthName}{" "}{currentYear}
+          </p>
+        </div>
+        <button
+          onClick={handleRefresh}
+          disabled={refreshing}
+          className="btn self-start"
+        >
+          <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+          <span className="font-bengali">{"রিফ্রেশ"}</span>
+        </button>
       </div>
 
-      {/* ৫টি মূল তথ্য কার্ডের গ্রিড লেআউট */}
+      {/* Metric Cards Grid */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        
-        {/* ১. মোট কর্মচারী কার্ড */}
-        <div className="flex items-center gap-4 rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
-          <div className="rounded-full bg-blue-50 p-4 text-blue-600">
-            <Users className="h-8 w-8" />
-          </div>
-          <div>
-            <p className="text-base font-semibold text-gray-500">{"মোট কর্মচারী"}</p>
-            <h3 className="text-2xl font-bold text-gray-850 mt-1">{stats.totalEmployees} {"জন"}</h3>
-          </div>
-        </div>
-
-        {/* ২. বর্তমানে কর্মরত কার্ড */}
-        <div className="flex items-center gap-4 rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
-          <div className="rounded-full bg-green-50 p-4 text-green-600">
-            <CheckCircle className="h-8 w-8" />
-          </div>
-          <div>
-            <p className="text-base font-semibold text-gray-500">{"বর্তমানে কর্মরত"}</p>
-            <h3 className="text-2xl font-bold text-green-700 mt-1">{stats.activeEmployees} {"জন"}</h3>
-          </div>
-        </div>
-
-        {/* ৩. ছুটিতে থাকা কার্ড */}
-        <div className="flex items-center gap-4 rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
-          <div className="rounded-full bg-amber-50 p-4 text-amber-600">
-            <CalendarX className="h-8 w-8" />
-          </div>
-          <div>
-            <p className="text-base font-semibold text-gray-500">{"বর্তমানে ছুটিতে"}</p>
-            <h3 className="text-2xl font-bold text-amber-700 mt-1">{stats.leaveEmployees} {"জন"}</h3>
-          </div>
-        </div>
-
-        {/* ৪. এই মাসের মোট অগ্রিম */}
-        <div className="flex items-center gap-4 rounded-xl border border-[#F4C430]/20 bg-[#F4C430]/10 p-6 shadow-sm">
-          <div className="rounded-full bg-[#F4C430]/20 p-4 text-amber-800">
-            <DollarSign className="h-8 w-8" />
-          </div>
-          <div>
-            <p className="text-base font-semibold text-amber-900">{"চলতি মাসের মোট অগ্রিম"}</p>
-            <h3 className="text-2xl font-bold text-amber-950 mt-1">{formatCurrency(stats.totalAdvancesThisMonth)} {"টাকা"}</h3>
-          </div>
-        </div>
-
-        {/* ৫. আনুমানিক বেতন বাজেট */}
-        <div className="flex items-center gap-4 rounded-xl border border-[#8B0000]/20 bg-[#8B0000]/5 p-6 shadow-sm">
-          <div className="rounded-full bg-[#8B0000]/10 p-4 text-[#8B0000]">
-            <DollarSign className="h-8 w-8" />
-          </div>
-          <div>
-            <p className="text-base font-semibold text-[#8B0000]">{"চলতি মাসের মূল বেতন বাজেট"}</p>
-            <h3 className="text-2xl font-bold text-[#8B0000] mt-1">{formatCurrency(stats.estimatedSalaryThisMonth)} {"টাকা"}</h3>
-          </div>
-        </div>
-
+        {metrics.map((metric, i) => {
+          const Icon = metric.icon;
+          return (
+            <div key={i} className="card card-hover">
+              <div className="flex items-center justify-between mb-3">
+                <div className={`w-10 h-10 rounded-[--radius-sm] flex items-center justify-center ${metric.bg} ${metric.color}`}>
+                  <Icon className="h-5 w-5" />
+                </div>
+              </div>
+              <p className="metric-value text-2xl md:text-3xl">
+                <span className="font-body">{metric.value}</span>
+                {metric.suffix && <span className="font-bengali text-lg md:text-xl text-[--color-foreground-muted] ml-1">{metric.suffix}</span>}
+              </p>
+              <p className="metric-label mt-1 font-bengali">{metric.label}</p>
+              <p className="text-[11px] text-[--color-foreground-muted] mt-0.5 font-body">{metric.labelEn}</p>
+            </div>
+          );
+        })}
       </div>
 
-      {/* ছুটিতে থাকা কর্মচারীদের তালিকা টেবিল সেকশন */}
-      <div className="rounded-xl border border-gray-100 bg-white shadow-sm overflow-hidden">
-        <div className="border-b bg-gray-50/50 px-6 py-4">
-          <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-            <CalendarX className="h-5 w-5 text-[#8B0000]" />
-            <span>{"বর্তমানে ছুটিতে থাকা কর্মচারীদের তালিকা"}</span>
-          </h3>
-          <p className="text-xs font-semibold text-gray-500 mt-0.5">{"বর্তমানে কারখানায় অনুপস্থিত ও ছুটিতে থাকা সকল কর্মচারীদের বিবরণ"}</p>
-        </div>
-
-        {leaveList.length === 0 ? (
-          <div className="p-8 text-center text-gray-400 font-bold">
-            <CheckCircle className="h-10 w-10 mx-auto text-green-500 mb-2" />
-            <p>{"বর্তমানে কোনো কর্মচারী ছুটিতে নেই।"}</p>
+      {/* Bottom panels grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Leave List Panel */}
+        <div className="lg:col-span-2 glass overflow-hidden">
+          <div className="border-b border-[--color-border] px-5 py-4">
+            <p className="text-xs font-semibold uppercase tracking-wider text-[--color-accent] font-bengali mb-1">{"অপেক্ষমান"}</p>
+            <h2 className="text-lg font-semibold text-[--color-foreground] font-bengali">{"বর্তমানে ছুটিতে থাকা কর্মচারীদের তালিকা"}</h2>
           </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-left text-sm font-semibold text-gray-800">
-              <thead>
-                <tr className="border-b bg-gray-50/75 text-xs font-bold text-gray-600">
-                  <th className="p-4">{"কর্মচারীর নাম"}</th>
-                  <th className="p-4">{"ক্যাটাগরি"}</th>
-                  <th className="p-4">{"ছুটি শুরুর তারিখ"}</th>
-                  <th className="p-4">{"ছুটিতে থাকার সময়কাল"}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y text-gray-700">
-                {leaveList.map((emp) => (
-                  <tr key={emp.id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="p-4 text-gray-900 font-bold">{emp.fullName}</td>
-                    <td className="p-4">
-                      <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-800 border border-amber-200">
-                        {emp.categoryName}
-                      </span>
-                    </td>
-                    <td className="p-4 text-gray-600">{formatDate(emp.startDate)}</td>
-                    <td className="p-4 text-red-700 font-bold">
-                      {`${emp.daysOnLeave} দিন যাবত`}
-                    </td>
+          {leaveList.length === 0 ? (
+            <div className="p-8 text-center text-[--color-foreground-muted]">
+              <p className="font-bengali font-semibold">{"বর্তমানে কোনো কর্মচারী ছুটিতে নেই।"}</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-left">
+                <thead>
+                  <tr className="border-b border-[--color-border] bg-[--color-surface-raised] text-xs font-semibold text-[--color-foreground-muted]">
+                    <th className="p-3 px-5">{"কর্মচারীর নাম"}</th>
+                    <th className="p-3 px-5">{"ক্যাটাগরি"}</th>
+                    <th className="p-3 px-5">{"ছুটি শুরুর তারিখ"}</th>
+                    <th className="p-3 px-5">{"ছুটিতে থাকার সময়কাল"}</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-[--color-border] text-sm">
+                  {leaveList.map((emp) => (
+                    <tr key={emp.id} className="transition-colors hover:bg-[--color-primary]/[0.02]">
+                      <td className="p-3 px-5 font-semibold text-[--color-foreground] font-bengali">{emp.fullName}</td>
+                      <td className="p-3 px-5">
+                        <span className="inline-block rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-800 border border-amber-200 font-bengali">
+                          {emp.categoryName}
+                        </span>
+                      </td>
+                      <td className="p-3 px-5 text-[--color-foreground-muted] font-body">{formatDate(emp.startDate)}</td>
+                      <td className="p-3 px-5 font-bold text-red-600 font-bengali">{`${emp.daysOnLeave} দিন যাবত`}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* AI Insights Panel */}
+        <div className="glass p-5">
+          <p className="text-xs font-semibold uppercase tracking-wider text-[--color-accent] font-bengali mb-1">{"AI পরামর্শ"}</p>
+          <h2 className="text-lg font-semibold text-[--color-foreground] font-bengali mb-4">{"পাঠকালীন সূচনা"}</h2>
+          <div className="space-y-3">
+            {[
+              { icon: Sparkles, text: 'এই মাসে মোট অগ্রিমের পরিমাণ গত মাসের তুলনায় ১৫% বেশি হয়েছে, মনোযোগ দিন।', color: 'text-amber-700', bg: 'bg-amber-50' },
+              { icon: Sparkles, text: '২ জন কর্মচারী presently on unpaid leave — check their return schedule.', color: 'text-purple-600', bg: 'bg-purple-50' },
+              { icon: Sparkles, text: 'বেতন স্লিপ ডাউনলোডে নতুন পেমেন্ট ট্র্যাকিং ফিচার চালু হয়েছে।', color: 'text-[--color-success]', bg: 'bg-green-50' },
+            ].map((insight, i) => (
+              <div key={i} className={`rounded-[--radius-sm] ${insight.bg} p-3 flex gap-2.5`}>
+                <insight.icon className={`h-4 w-4 ${insight.color} shrink-0 mt-0.5`} />
+                <p className="text-xs font-semibold text-[--color-foreground] font-bengali leading-relaxed">{insight.text}</p>
+              </div>
+            ))}
           </div>
-        )}
+        </div>
       </div>
 
-      {/* নির্দেশাবলী */}
-      <div className="rounded-xl border border-gray-100 bg-[#8B0000]/5 p-6">
-        <h4 className="text-base font-bold text-[#8B0000]">{"সহজ নির্দেশিকা:"}</h4>
-        <ul className="mt-2 space-y-2 text-sm font-semibold text-gray-700 list-disc pl-5">
-          <li>{"নতুন কর্মচারী যোগ করতে এবং কর্মচারীদের ছুটি বা অগ্রিম দিতে বাম পাশের মেনু থেকে \"কর্মচারী তালিকা\"-এ যান।"}</li>
-          <li>{"প্রতি মাসের বেতন তৈরি করতে এবং মাসের হিসেব মেলাতে \"বেতন ও পে-রোল\" মেনু ব্যবহার করুন।"}</li>
-          <li>{"মোবাইল থেকে দেখার সময় উপরে ডানের বোতাম টিপে মেনু ওপেন করুন।"}</li>
+      {/* Instructions */}
+      <div className="rounded-[--radius-md] border border-[--color-border] bg-[--color-surface-raised]/50 p-5">
+        <h4 className="text-sm font-bold text-[--color-primary] font-bengali mb-2">{"সহজ নির্দেশিকা:"}</h4>
+        <ul className="space-y-1.5 text-sm font-semibold text-[--color-foreground-muted] list-disc pl-5 font-bengali">
+          <li>{"নতুন কর্মচারী যোগ করতে বাম পাশের মেনু থেকে কর্মচারী তালিকা-এ যান।"}</li>
+          <li>{"প্রতি মাসের বেতন তৈরি করতে বেতন ও পে-রোল মেনু ব্যবহার করুন।"}</li>
+          <li>{"মোবাইল থেকে দেখার সময় নিচের নেভিগেশัน বা মেনু বাটন ব্যবহার করুন।"}</li>
         </ul>
       </div>
     </div>

@@ -1,17 +1,6 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { GlobalToastProvider } from "@/components/global-toaster";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "বিসমিল্লাহ - স্যালারি ও এআই ম্যানেজমেন্ট",
@@ -26,10 +15,9 @@ export default function RootLayout({
   return (
     <html
       lang="bn"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className="h-full antialiased"
     >
-      <body className="min-h-full flex flex-col">
-        {/* গ্লোবাল উইন্ডো অ্যালার্ট ইন্টারসেপ্টর ও টোস্ট রেন্ডারার */}
+      <body className="min-h-full flex flex-col bg-[--color-bg] text-[--color-foreground]">
         <GlobalToastProvider />
         {children}
       </body>

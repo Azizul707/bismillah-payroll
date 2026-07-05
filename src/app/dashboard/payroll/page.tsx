@@ -313,13 +313,13 @@ export default function PayrollPage() {
       {/* হেডার এরিয়া */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b pb-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-black text-gray-900">{"বেতন ও পে-রোল হিসাব"}</h1>
+          <h1 className="text-2xl md:text-3xl font-black text-[--color-foreground]">{"বেতন ও পে-রোল হিসাব"}</h1>
           <p className="text-sm font-bold text-gray-500 mt-1">{"মাসের বেতন হিসাব এবং লক/আনলক কন্ট্রোল"}</p>
         </div>
       </div>
 
       {/* মাস ও বছর ফিল্টার এরিয়া */}
-      <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm flex flex-col sm:flex-row items-center gap-4 text-base font-bold text-gray-700">
+      <div className="rounded-xl border border-[--color-border] bg-[--color-surface] p-5 shadow-sm flex flex-col sm:flex-row items-center gap-4 text-base font-bold text-gray-700">
         <div className="flex flex-col w-full sm:w-auto gap-1">
           <label className="text-sm text-gray-400">{"বেতন মাস"}</label>
           <select
@@ -351,7 +351,7 @@ export default function PayrollPage() {
             <button
               onClick={handleGeneratePayroll}
               disabled={generating}
-              className="flex items-center justify-center gap-2 w-full sm:w-auto rounded-lg bg-[#8B0000] hover:bg-[#8B0000]/90 text-white px-5 py-3 shadow transition-colors cursor-pointer"
+              className="flex items-center justify-center gap-2 w-full sm:w-auto rounded-lg bg-[--color-primary] hover:bg-[--color-primary]/90 text-white px-5 py-3 shadow transition-colors cursor-pointer"
             >
               <RefreshCw className={`h-5 w-5 ${generating ? 'animate-spin' : ''}`} />
               <span>{generating ? 'হিসাব তৈরি হচ্ছে...' : 'বেতন হিসাব তৈরি করুন'}</span>
@@ -370,7 +370,7 @@ export default function PayrollPage() {
         <div className={`rounded-xl border p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${
           payroll.is_locked 
             ? 'bg-green-50 border-green-200 text-green-900' 
-            : 'bg-[#F4C430]/10 border-[#F4C430]/30 text-amber-900'
+            : 'bg-[--color-accent]/10 border-[#F4C430]/30 text-amber-900'
         }`}>
           <div className="flex items-start gap-3">
             <AlertCircle className={`h-6 w-6 mt-0.5 ${payroll.is_locked ? 'text-green-600' : 'text-amber-600'}`} />
@@ -399,7 +399,7 @@ export default function PayrollPage() {
               <button
                 onClick={handleLockPayroll}
                 disabled={locking}
-                className="flex items-center justify-center gap-2 rounded-lg bg-[#8B0000] hover:bg-[#8B0000]/90 text-white px-5 py-2.5 text-sm font-black shadow transition-colors cursor-pointer"
+                className="flex items-center justify-center gap-2 rounded-lg bg-[--color-primary] hover:bg-[--color-primary]/90 text-white px-5 py-2.5 text-sm font-black shadow transition-colors cursor-pointer"
               >
                 <Lock className="h-4 w-4" />
                 <span>{locking ? 'লক হচ্ছে...' : 'মাসের হিসাব সম্পন্ন ও লক করুন'}</span>
@@ -411,7 +411,7 @@ export default function PayrollPage() {
 
       {/* সার্চ ও ফিল্টার সেকশন (শুধুমাত্র তখনই দৃশ্যমান হবে যখন ডেটা থাকবে) */}
       {payrollItems.length > 0 && (
-        <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm flex flex-col md:flex-row items-center gap-4">
+        <div className="rounded-xl border border-[--color-border] bg-[--color-surface] p-4 shadow-sm flex flex-col md:flex-row items-center gap-4">
           {/* সার্চ ইনপুট */}
           <div className="relative flex-1 w-full">
             <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
@@ -422,7 +422,7 @@ export default function PayrollPage() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="কর্মচারীর নাম, কোড, মোবাইল বা ক্যাটাগরি দিয়ে খুঁজুন..."
-              className="w-full rounded-lg border border-gray-200 pl-10 pr-4 py-2.5 font-bold text-gray-700 placeholder-gray-400 focus:outline-none focus:border-[#8B0000] focus:ring-1 focus:ring-[#8B0000] text-sm"
+              className="w-full rounded-lg border border-[--color-border] pl-10 pr-4 py-2.5 font-bold text-gray-700 placeholder-gray-400 focus:outline-none focus:border-[#8B0000] focus:ring-1 focus:ring-[#8B0000] text-sm"
             />
           </div>
 
@@ -434,7 +434,7 @@ export default function PayrollPage() {
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full rounded-lg border border-gray-200 p-2.5 font-bold text-gray-700 focus:outline-none focus:border-[#8B0000] text-sm"
+              className="w-full rounded-lg border border-[--color-border] p-2.5 font-bold text-gray-700 focus:outline-none focus:border-[#8B0000] text-sm"
             >
               <option value="all">{"সকল ক্যাটাগরি"}</option>
               {categoryCache.data.map((cat) => (
@@ -461,7 +461,7 @@ export default function PayrollPage() {
               onClick={() => setPaymentFilter(tab.key as 'all' | 'paid' | 'unpaid')}
               className={`px-4 py-2 rounded-lg text-sm font-black transition-all duration-150 cursor-pointer ${
                 paymentFilter === tab.key
-                  ? 'bg-[#8B0000] text-white shadow'
+                  ? 'bg-[--color-primary] text-white shadow'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
@@ -473,7 +473,7 @@ export default function PayrollPage() {
 
       {/* পে-রোল বিস্তারিত টেবিল */}
       <Suspense fallback={
-        <div className="rounded-xl border border-gray-100 bg-white shadow-sm overflow-hidden">
+        <div className="rounded-xl border border-[--color-border] bg-[--color-surface] shadow-sm overflow-hidden">
           <table className="w-full border-collapse text-left">
             <thead>
               <tr className="border-b bg-gray-50 text-sm font-black text-gray-700">
@@ -485,12 +485,12 @@ export default function PayrollPage() {
                 <th className="p-4">{"বোনাস দিন"}</th>
                 <th className="p-4">{"মোট (Gross)"}</th>
                 <th className="p-4">{"অগ্রিম সমন্বয়"}</th>
-                <th className="p-4 font-black text-[#8B0000]">{"নিট বেতন"}</th>
+                <th className="p-4 font-black text-[--color-primary]">{"নিট বেতন"}</th>
                 <th className="p-4 text-center">{"পরিশোধ"}</th>
                 <th className="p-4 text-center">{"রসিদ"}</th>
               </tr>
             </thead>
-            <tbody className="divide-y text-base font-bold text-gray-800">
+            <tbody className="divide-y text-base font-bold text-[--color-foreground]">
               {Array.from({ length: 6 }).map((_, i) => (
                 <tr key={i} className="animate-pulse">
                   {Array.from({ length: 11 }).map((_, j) => (
@@ -510,20 +510,20 @@ export default function PayrollPage() {
           <p className="mt-4 font-bold text-gray-500">{"তথ্য খোঁজা হচ্ছে..."}</p>
         </div>
       ) : payrollItems.length === 0 ? (
-        <div className="rounded-xl border border-gray-100 bg-white p-12 text-center text-gray-400 shadow-sm">
+        <div className="rounded-xl border border-[--color-border] bg-[--color-surface] p-12 text-center text-gray-400 shadow-sm">
           <CreditCard className="h-12 w-12 mx-auto text-gray-300" />
           <p className="mt-4 text-lg font-bold">{"এই মাসের কোনো বেতন হিসেব এখনও তৈরি করা হয়নি।"}</p>
           <p className="text-sm font-bold text-gray-400 mt-1">{"বেতন তৈরি করতে উপরের বোতামটি চাপুন।"}</p>
         </div>
       ) : filteredPayrollItems.length === 0 ? (
         // সার্চ বা ফিল্টার করে ডেটা না পাওয়া গেলে
-        <div className="rounded-xl border border-gray-100 bg-white p-12 text-center text-gray-400 shadow-sm">
+        <div className="rounded-xl border border-[--color-border] bg-[--color-surface] p-12 text-center text-gray-400 shadow-sm">
           <Search className="h-12 w-12 mx-auto text-gray-300" />
           <p className="mt-4 text-lg font-bold">{"কোনো মিল পাওয়া যায়নি!"}</p>
           <p className="text-sm font-bold text-gray-400 mt-1">{"দয়া করে সঠিক নাম, কোড, মোবাইল বা ক্যাটাগরি লিখে আবার চেষ্টা করুন।"}</p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-gray-100 bg-white shadow-sm">
+        <div className="overflow-x-auto rounded-xl border border-[--color-border] bg-[--color-surface] shadow-sm">
           <table className="w-full border-collapse text-left">
             <thead>
               <tr className="border-b bg-gray-50 text-sm font-black text-gray-700">
@@ -535,16 +535,16 @@ export default function PayrollPage() {
                 <th className="p-4">{"বোনাস দিন"}</th>
                 <th className="p-4">{"মোট (Gross)"}</th>
                 <th className="p-4">{"অগ্রিম সমন্বয়"}</th>
-                <th className="p-4 font-black text-[#8B0000]">{"নিট বেতন"}</th>
+                <th className="p-4 font-black text-[--color-primary]">{"নিট বেতন"}</th>
                 <th className="p-4 text-center">{"পরিশোধ"}</th>
                 <th className="p-4 text-center">{"রসিদ"}</th>
               </tr>
             </thead>
-            <tbody className="divide-y text-base font-bold text-gray-800">
+            <tbody className="divide-y text-base font-bold text-[--color-foreground]">
               {filteredPayrollItems.map((item) => (
                 <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
                   <td className="p-4">
-                    <p className="font-black text-gray-900">{item.employees?.full_name}</p>
+                    <p className="font-black text-[--color-foreground]">{item.employees?.full_name}</p>
                     <span className="text-xs font-black text-gray-400">
                       {item.employees?.employee_code}
                       {item.employees?.categories?.category_name && ` | ${item.employees.categories.category_name}`}
@@ -625,8 +625,8 @@ export default function PayrollPage() {
       {/* ========================================== */}
       {isUnlockModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl space-y-4">
-            <h2 className="text-xl font-black text-gray-900 border-b pb-2 flex items-center gap-2">
+          <div className="w-full max-w-md rounded-xl bg-[--color-surface] p-6 shadow-xl space-y-4">
+            <h2 className="text-xl font-black text-[--color-foreground] border-b pb-2 flex items-center gap-2">
               <Unlock className="h-5 w-5 text-red-600" />
               <span>{"বেতন হিসাব আনলক করুন"}</span>
             </h2>
@@ -640,7 +640,7 @@ export default function PayrollPage() {
                   placeholder="যেমন: ম্যানেজারের অনুরোধে অমুকের অগ্রিম কাটতে ভুল সংশোধন করা হবে।"
                   value={unlockReason}
                   onChange={(e) => setUnlockReason(e.target.value)}
-                  className="w-full rounded-lg border bg-white p-2.5 font-bold text-gray-800"
+                  className="w-full rounded-lg border bg-[--color-surface] p-2.5 font-bold text-[--color-foreground]"
                 />
               </div>
 

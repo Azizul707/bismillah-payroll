@@ -1,108 +1,357 @@
-/* 
-  ১. গুগল ফন্ট 'Tiro Bangla' ইমপোর্ট 
-  (সিএসএস নিয়ম অনুযায়ী এটি অবশ্যই ফাইলের একদম প্রথম লাইনে হতে হবে, অন্যথায় ব্রাউজার এটি রিজেক্ট করবে) 
-*/
-@import url('https://fonts.googleapis.com/css2?family=Tiro+Bangla:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+/* =====================================================================
+   Bismillah Sweets — Global Design Tokens & Utilities
+   Phase 1: CSS Variables, Fonts, Animations
+   ===================================================================== */
 
-/* ২. আধুনিক Tailwind CSS v4 ইমপোর্ট */
+/* 1. Google Fonts — Tiro Bangla + Inter only */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Tiro+Bangla:ital,wght@0,400;0,600;0,700;1,400;1,700&display=swap');
+
+/* 2. Tailwind CSS v4 */
 @import "tailwindcss";
 
-/* ৩. ইংলিশ সংখ্যার জন্য ক্লিন সান্স-সেটিফ ফন্ট ম্যাপ করা (টিরো বাংলা ফন্টের ওপর ওভাররাইড) */
+/* 3. English digit sanitization — keep Tiro Bangla for Bengali, clean sans-serif for numbers */
 @font-face {
   font-family: 'Tiro Bangla';
   src: local('Segoe UI'), local('Arial'), local('Helvetica'), local('sans-serif');
-  unicode-range: U+0030-0039; /* শুধুমাত্র ইংরেজি সংখ্যা ০ থেকে ৯ */
+  unicode-range: U+0030-0039;
 }
 
-/* ৪. টেইলউইন্ড থিম কনফিগারেশন (বিসমিল্লাহ ব্র্যান্ড কালার্স ও গ্লোবাল ফন্ট) */
+/* 4. Tailwind theme tokens mapping CSS custom properties */
 @theme {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: var(--color-bg);
+  --color-foreground: var(--color-foreground);
 
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--color-surface);
+  --color-card-foreground: var(--color-foreground);
 
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--color-surface);
+  --color-popover-foreground: var(--color-foreground);
 
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--color-primary);
+  --color-primary-foreground: #FFFFFF;
 
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--color-accent);
+  --color-secondary-foreground: var(--color-primary-dark);
 
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--color-foreground-muted);
+  --color-muted-foreground: var(--color-foreground-muted);
 
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--color-accent);
+  --color-accent-foreground: var(--color-primary-dark);
 
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
+  --color-destructive: var(--color-danger);
+  --color-destructive-foreground: #FFFFFF;
 
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
+  --color-border: var(--color-border);
+  --color-input: var(--color-border);
+  --color-ring: var(--color-primary);
 
-  --radius-lg: var(--radius);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
 
-  /* Tailwind-এর ডিফল্ট sans-serif ফন্ট হিসেবে 'Tiro Bangla' সেট করা হলো */
-  --font-sans: 'Tiro Bangla', serif;
+  --font-sans: var(--font-body);
 }
 
-/* ৫. সিএসএস ভ্যারিয়েবল সেটআপ (রঙের সহজ হেক্স কোড) */
+/* 5. Design token registry — :root custom properties */
 :root {
-  --background: #ffffff;
-  --foreground: #1a1a1a;
+  /* ---- Locked Color Palette ---- */
+  --color-primary: #8B0000;
+  --color-primary-light: #990a0a;
+  --color-primary-dark: #5C0000;
 
-  --card: #ffffff;
-  --card-foreground: #1a1a1a;
+  --color-accent: #EAB308;
+  --color-accent-light: #FACC15;
+  --color-accent-dark: #CA8A04;
 
-  --popover: #ffffff;
-  --popover-foreground: #1a1a1a;
+  --color-bg: #FFFFFF;
+  --color-surface: #FFFFFF;
+  --color-surface-raised: #FAF9F6;
 
-  --primary: #8b0000; /* বিসমিল্লাহ গাঢ় লাল */
-  --primary-foreground: #ffffff;
+  --color-foreground: #1e293b;
+  --color-foreground-muted: #64748b;
+  --color-border: #e2e8f0;
 
-  --secondary: #f4c430; /* বিসমিল্লাহ সোনালী হলুদ */
-  --secondary-foreground: #000000;
+  --color-success: #16a34a;
+  --color-warning: #f59e0b;
+  --color-danger: #dc2626;
 
-  --muted: #f4f4f5;
-  --muted-foreground: #71717a;
+  /* ---- Glassmorphism Tokens ---- */
+  --glass-bg: rgba(255, 255, 255, 0.90);
+  --glass-border: rgba(0, 0, 0, 0.06);
+  --glass-blur: blur(12px);
+  --glass-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --glass-shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.04);
 
-  --accent: #f4f4f5;
-  --accent-foreground: #8b0000;
+  /* ---- Radius Tokens ---- */
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
 
-  --destructive: #ef4444;
-  --destructive-foreground: #f8fafc;
+  /* ---- Shadow Tokens ---- */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.04), 0 2px 4px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.06);
+  --shadow-xl: 0 12px 40px rgba(0, 0, 0, 0.08), 0 8px 20px rgba(0, 0, 0, 0.06);
 
-  --border: #e4e4e7;
-  --input: #e4e4e7;
-  --ring: #8b0000;
+  /* ---- Transition Tokens ---- */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.6, 1);
 
-  --radius: 0.5rem;
+  /* ---- Font Families ---- */
+  --font-bengali: 'Tiro Bangla', serif;
+  --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
 }
 
-/* ৬. গ্লোবাল রিসেট এবং বডি স্টাইলস */
-@utility border-border {
-  border-color: var(--border);
+/* 6. Base element styles */
+body {
+  background-color: var(--color-bg);
+  color: var(--color-foreground);
+  font-family: var(--font-body);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* 
-  সম্পূর্ণ অ্যাপ্লিকেশন, সমস্ত ফর্ম ইনপুট, সিলেক্ট বক্স, ড্রপডাউন, 
-  টেক্সট এরিয়া এবং বোতামে গ্লোবালি 'Tiro Bangla' ফন্ট সক্রিয় করা হলো 
-*/
-html,
-body,
+/* Bengali text contexts */
+:lang(bn),
+.font-bengali {
+  font-family: var(--font-bengali) !important;
+}
+
+/* Headings — always Tiro Bangla */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-bengali);
+  font-weight: 600;
+  color: var(--color-foreground);
+  line-height: 1.3;
+}
+
+h1 { font-size: 1.5rem; font-weight: 700; }
+@media (min-width: 1024px) { h1 { font-size: 1.875rem; } }
+
+h2 { font-size: 1.25rem; font-weight: 600; }
+@media (min-width: 1024px) { h2 { font-size: 1.5rem; } }
+
+h3 { font-size: 1.125rem; font-weight: 600; }
+@media (min-width: 1024px) { h3 { font-size: 1.25rem; } }
+
+/* Links */
+a {
+  color: var(--color-primary);
+  transition: color var(--transition-fast) ease;
+}
+a:hover {
+  color: var(--color-primary-light);
+}
+
+/* Form controls — always Inter */
+button,
 input,
 select,
-textarea,
-button {
-  font-family: 'Tiro Bangla', serif !important;
+textarea {
+  font-family: var(--font-body);
 }
 
-body {
-  background-color: var(--background);
-  color: var(--foreground);
-  min-height: 100vh;
+/* 7. Utility classes */
+
+/* Glass surface */
+.glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-shadow);
+  border-radius: var(--radius-md);
+}
+
+.glass-hover {
+  transition: box-shadow var(--transition-base) ease, transform var(--transition-fast) ease;
+}
+.glass-hover:hover {
+  box-shadow: var(--glass-shadow-hover);
+  transform: translateY(-1px);
+}
+
+/* Card */
+.card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  box-shadow: var(--glass-shadow);
+  transition: all var(--transition-base) ease;
+}
+
+.card-hover {
+  cursor: pointer;
+}
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--glass-shadow-hover);
+}
+
+/* Input field */
+.input-field {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1rem;
+  transition: all var(--transition-fast) ease;
+}
+.input-field:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(139, 0, 0, 0.12);
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 0.9375rem;
+  transition: all var(--transition-fast) ease;
+  cursor: pointer;
+  border: none;
+  line-height: 1.4;
+}
+
+.btn-primary {
+  background: var(--color-primary);
+  color: #FFFFFF;
+  box-shadow: var(--shadow-md);
+}
+.btn-primary:hover {
+  background: var(--color-primary-light);
+  box-shadow: var(--shadow-lg);
+}
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-accent {
+  background: var(--color-accent);
+  color: var(--color-primary-dark);
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+}
+.btn-accent:hover {
+  background: var(--color-accent-light);
+  box-shadow: var(--shadow-md);
+}
+
+/* Metric tiles */
+.metric-value {
+  font-family: var(--font-body);
+  font-weight: 600;
+  color: var(--color-primary);
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.metric-label {
+  font-family: var(--font-bengali);
+  font-weight: 400;
+  color: var(--color-foreground-muted);
+  font-size: 0.8125rem;
+}
+
+/* Sidebar link */
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 1rem;
+  border-radius: var(--radius-sm);
+  color: var(--color-foreground-muted);
+  font-family: var(--font-bengali);
+  font-weight: 500;
+  transition: all var(--transition-fast) ease;
+  text-decoration: none;
+}
+.sidebar-link:hover {
+  color: var(--color-primary);
+  background: rgba(139, 0, 0, 0.05);
+}
+.sidebar-link.active {
+  color: var(--color-primary);
+  background: rgba(139, 0, 0, 0.08);
+  font-weight: 600;
+  border-left: 2px solid var(--color-primary);
+}
+
+/* 8. Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeInScale {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+@keyframes slideInRight {
+  from { transform: translateX(20px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+@keyframes progressShrink {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* 9. Animation utility classes */
+.animate-fade-in {
+  animation: fadeIn var(--transition-base) ease-out forwards;
+}
+.animate-fade-in-up {
+  animation: fadeInUp var(--transition-base) ease-out forwards;
+}
+.animate-fade-in-scale {
+  animation: fadeInScale var(--transition-fast) ease-out forwards;
+}
+.animate-slide-up {
+  animation: slideUp var(--transition-base) ease-out forwards;
+}
+.animate-slide-in-right {
+  animation: slideInRight var(--transition-base) ease-out forwards;
+}
+
+/* 10. Reduced motion accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* 11. Utility border */
+@utility border-border {
+  border-color: var(--color-border);
 }

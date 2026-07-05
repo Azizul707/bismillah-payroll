@@ -148,8 +148,8 @@ export default function EmployeesPage() {
     return (
       <div className="flex h-[60vh] items-center justify-center">
         <div className="text-center">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#8B0000] border-t-transparent mx-auto"></div>
-          <p className="mt-4 text-lg font-bold text-gray-700">{"তথ্য লোড করা হচ্ছে..."}</p>
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-[--color-primary] border-t-transparent mx-auto"></div>
+          <p className="mt-4 text-lg font-semibold text-[--color-foreground-muted]">{"তথ্য লোড করা হচ্ছে..."}</p>
         </div>
       </div>
     );
@@ -160,8 +160,8 @@ export default function EmployeesPage() {
       {/* হেডার এরিয়া */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b pb-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-black text-gray-900">{"কর্মচারী তালিকা"}</h1>
-          <p className="text-sm font-bold text-gray-500 mt-1">{"সব কর্মচারীদের ড্যাশবোর্ড ও প্রোফাইল অ্যাকশন"}</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-[--color-foreground] font-bengali">{"কর্মচারী তালিকা"}</h1>
+          <p className="text-sm font-semibold text-[--color-foreground-muted] mt-1 font-bengali">{"সব কর্মচারীদের ড্যাশবোর্ড ও প্রোফাইল অ্যাকশন"}</p>
         </div>
         <button
           onClick={() => {
@@ -171,9 +171,9 @@ export default function EmployeesPage() {
             }
             setIsModalOpen(true);
           }}
-          className="flex items-center justify-center gap-2 rounded-lg bg-[#8B0000] hover:bg-[#8B0000]/90 px-5 py-3 text-base font-bold text-white shadow transition-all duration-150 cursor-pointer"
+          className="flex items-center justify-center gap-2 rounded-lg bg-[--color-primary] hover:bg-[--color-primary]/90 px-5 py-3 text-base font-bold text-white shadow transition-all duration-150 cursor-pointer"
         >
-          <Plus className="h-5 w-5 text-[#F4C430]" />
+          <Plus className="h-5 w-5 text-[--color-accent]" />
           <span>{"নতুন কর্মচারী যোগ করুন"}</span>
         </button>
       </div>
@@ -188,7 +188,7 @@ export default function EmployeesPage() {
             placeholder="নাম, কোড বা মোবাইল নম্বর দিয়ে খুঁজুন..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full rounded-lg border border-gray-200 bg-white py-3 pl-11 pr-4 text-base font-bold text-gray-800 placeholder-gray-400 focus:border-[#8B0000] focus:outline-none"
+            className="w-full rounded-lg border border-[--color-border] bg-[--color-surface] py-3 pl-11 pr-4 text-base font-bold text-[--color-foreground] placeholder-gray-400 focus:border-[#8B0000] focus:outline-none"
           />
         </div>
 
@@ -197,7 +197,7 @@ export default function EmployeesPage() {
           <select
             value={selectedCategoryFilter}
             onChange={(e) => setSelectedCategoryFilter(e.target.value)}
-            className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-base font-bold text-gray-800 focus:border-[#8B0000] focus:outline-none cursor-pointer"
+            className="w-full rounded-lg border border-[--color-border] bg-[--color-surface] px-4 py-3 text-base font-bold text-[--color-foreground] focus:border-[#8B0000] focus:outline-none cursor-pointer"
           >
             <option value="">{"সকল ক্যাটাগরি/বিভাগ"}</option>
             {categories.map(c => (
@@ -213,10 +213,10 @@ export default function EmployeesPage() {
           <p className="text-center font-bold text-gray-500 py-12">{"কোনো কর্মচারী পাওয়া হয়নি।"}</p>
         ) : (
           filteredEmployees.map((emp) => (
-            <div key={emp.id} className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm space-y-4">
+            <div key={emp.id} className="rounded-xl border border-[--color-border] bg-[--color-surface] p-5 shadow-sm space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg font-black text-gray-900">{emp.full_name}</h3>
+                  <h3 className="text-lg font-black text-[--color-foreground]">{emp.full_name}</h3>
                   <span className="text-xs font-black text-gray-400">{emp.employee_code}</span>
                 </div>
                 <span className={`rounded-full px-3 py-1 text-xs font-black ${
@@ -245,7 +245,7 @@ export default function EmployeesPage() {
 
               <Link
                 href={`/dashboard/employees/${emp.id}`}
-                className="flex items-center justify-center gap-2 w-full rounded-lg bg-gray-100 hover:bg-[#F4C430]/20 hover:text-black py-3 text-sm font-black text-gray-700 transition-colors"
+                className="flex items-center justify-center gap-2 w-full rounded-lg bg-gray-100 hover:bg-[--color-accent]/20 hover:text-black py-3 text-sm font-black text-[--color-foreground] transition-colors"
               >
                 <Eye className="h-4 w-4" />
                 <span>{"প্রোফাইল ও অ্যাকশন দেখুন"}</span>
@@ -256,10 +256,10 @@ export default function EmployeesPage() {
       </div>
 
       {/* ডেক্সটপ ভিউ টেবিল */}
-      <div className="hidden md:block overflow-x-auto rounded-xl border border-gray-100 bg-white shadow-sm">
+      <div className="hidden md:block overflow-x-auto rounded-xl border border-[--color-border] bg-[--color-surface] shadow-sm">
         <table className="w-full border-collapse text-left">
           <thead>
-            <tr className="border-b bg-gray-50 text-sm font-black text-gray-700">
+            <tr className="border-b bg-gray-50 text-sm font-black text-[--color-foreground]">
               <th className="p-4">{"কোড"}</th>
               <th className="p-4">{"নাম"}</th>
               <th className="p-4">{"মোবাইল"}</th>
@@ -269,7 +269,7 @@ export default function EmployeesPage() {
               <th className="p-4 text-center">{"অ্যাকশন"}</th>
             </tr>
           </thead>
-          <tbody className="divide-y text-base font-bold text-gray-800">
+          <tbody className="divide-y text-base font-bold text-[--color-foreground]">
             {filteredEmployees.length === 0 ? (
               <tr>
                 <td colSpan={7} className="p-8 text-center text-gray-500 font-bold">{"কোনো কর্মচারী পাওয়া হয়নি।"}</td>
@@ -294,7 +294,7 @@ export default function EmployeesPage() {
                   <td className="p-4 text-center">
                     <Link
                       href={`/dashboard/employees/${emp.id}`}
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-gray-100 hover:bg-[#F4C430]/20 px-3.5 py-2 text-sm font-black text-gray-700 transition-colors"
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-gray-100 hover:bg-[--color-accent]/20 px-3.5 py-2 text-sm font-black text-[--color-foreground] transition-colors"
                     >
                       <Eye className="h-4 w-4" />
                       <span>{"প্রোফাইল"}</span>
@@ -310,10 +310,10 @@ export default function EmployeesPage() {
       {/* নতুন কর্মচারী যোগ করার মডাল/পপআপ ফর্ম */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
+          <div className="w-full max-w-lg rounded-xl bg-[--color-surface] p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b pb-3">
-              <h2 className="text-xl font-black text-gray-900 flex items-center gap-2">
-                <UserPlus className="h-5 w-5 text-[#8B0000]" />
+              <h2 className="text-xl font-black text-[--color-foreground] flex items-center gap-2">
+                <UserPlus className="h-5 w-5 text-[--color-primary]" />
                 <span>{"নতুন কর্মচারী যোগ করুন"}</span>
               </h2>
               <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-black focus:outline-none">
@@ -321,7 +321,7 @@ export default function EmployeesPage() {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4 text-base font-bold text-gray-700">
+            <form onSubmit={handleSubmit} className="space-y-4 text-base font-bold text-[--color-foreground]">
               {formError && (
                 <div className="rounded-lg bg-red-50 p-3 text-sm font-black text-red-600">{formError}</div>
               )}
@@ -335,7 +335,7 @@ export default function EmployeesPage() {
                   placeholder="যেমন: আব্দুর রহিম"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="w-full rounded-lg border border-gray-200 p-2.5 focus:border-[#8B0000] focus:outline-none font-bold text-gray-800"
+                  className="w-full rounded-lg border border-[--color-border] p-2.5 focus:border-[#8B0000] focus:outline-none font-bold text-[--color-foreground]"
                 />
               </div>
 
@@ -348,7 +348,7 @@ export default function EmployeesPage() {
                   placeholder="যেমন: 01712345678"
                   value={mobileNumber}
                   onChange={(e) => setMobileNumber(e.target.value)}
-                  className="w-full rounded-lg border border-gray-200 p-2.5 focus:border-[#8B0000] focus:outline-none font-bold text-gray-800"
+                  className="w-full rounded-lg border border-[--color-border] p-2.5 focus:border-[#8B0000] focus:outline-none font-bold text-[--color-foreground]"
                 />
               </div>
 
@@ -359,7 +359,7 @@ export default function EmployeesPage() {
                   value={categoryId}
                   onChange={(e) => setCategoryId(e.target.value)}
                   required
-                  className="w-full rounded-lg border border-gray-200 p-2.5 focus:border-[#8B0000] focus:outline-none font-bold text-gray-800"
+                  className="w-full rounded-lg border border-[--color-border] p-2.5 focus:border-[#8B0000] focus:outline-none font-bold text-[--color-foreground]"
                 >
                   <option value="">{"ক্যাটাগরি নির্বাচন করুন"}</option>
                   {categories.map(c => (
@@ -378,7 +378,7 @@ export default function EmployeesPage() {
                     placeholder="যেমন: 15000"
                     value={monthlySalary}
                     onChange={(e) => setMonthlySalary(e.target.value)}
-                    className="w-full rounded-lg border border-gray-200 p-2.5 focus:border-[#8B0000] focus:outline-none font-bold text-gray-800"
+                    className="w-full rounded-lg border border-[--color-border] p-2.5 focus:border-[#8B0000] focus:outline-none font-bold text-[--color-foreground]"
                   />
                 </div>
 
@@ -389,7 +389,7 @@ export default function EmployeesPage() {
                     required
                     value={joiningDate}
                     onChange={(e) => setJoiningDate(e.target.value)}
-                    className="w-full rounded-lg border border-gray-200 p-2.5 focus:border-[#8B0000] focus:outline-none font-bold text-gray-800"
+                    className="w-full rounded-lg border border-[--color-border] p-2.5 focus:border-[#8B0000] focus:outline-none font-bold text-[--color-foreground]"
                   />
                 </div>
               </div>
@@ -401,7 +401,7 @@ export default function EmployeesPage() {
                   placeholder="যেমন: কারিগর প্রধান"
                   value={remarks}
                   onChange={(e) => setRemarks(e.target.value)}
-                  className="w-full rounded-lg border border-gray-200 p-2.5 focus:border-[#8B0000] focus:outline-none font-bold text-gray-800"
+                  className="w-full rounded-lg border border-[--color-border] p-2.5 focus:border-[#8B0000] focus:outline-none font-bold text-[--color-foreground]"
                 />
               </div>
 
@@ -410,14 +410,14 @@ export default function EmployeesPage() {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="flex-1 rounded-lg border border-gray-200 py-3 text-center font-bold text-gray-600 hover:bg-gray-50 focus:outline-none cursor-pointer"
+                  className="flex-1 rounded-lg border border-[--color-border] py-3 text-center font-bold text-gray-600 hover:bg-gray-50 focus:outline-none cursor-pointer"
                 >
                   {"বাতিল করুন"}
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="flex-1 rounded-lg bg-[#8B0000] hover:bg-[#8B0000]/90 py-3 text-center font-bold text-white shadow focus:outline-none cursor-pointer"
+                  className="flex-1 rounded-lg bg-[--color-primary] hover:bg-[--color-primary]/90 py-3 text-center font-bold text-white shadow focus:outline-none cursor-pointer"
                 >
                   {submitting ? 'সংরক্ষণ হচ্ছে...' : 'সংরক্ষণ করুন'}
                 </button>
