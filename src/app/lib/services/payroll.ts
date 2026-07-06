@@ -133,7 +133,7 @@ export class PayrollService {
 
     if (empError) throw empError;
 
-    // ৫. (Sprint 2) সব কর্মচারীদের জন্য অগ্রিম টেবিল থেকে একসাথে bulk fetch
+    // ৫. সব কর্মচারীদের জন্য অগ্রিম টেবিল থেকে একসাথে bulk fetch
     const { data: advData, error: advError } = await db.salary_advances()
       .select('*')
       .eq('advance_month', month)
@@ -163,7 +163,7 @@ export class PayrollService {
       const payableDays = dutyDays + bonusDays;
       const grossSalary = dailySalary * payableDays;
 
-      // ঙ. (Sprint 2) in-memory advance filtering (no extra DB round-trip)
+      // ঙ. in-memory advance filtering (no extra DB round-trip)
       const empAdvances = allAdvances.filter(adv => adv.employee_id === emp.id);
       const totalAdvance = empAdvances.reduce((acc, curr) => acc + Number(curr.amount), 0);
 
@@ -258,7 +258,7 @@ export class PayrollService {
   }
 
   /**
-   * Persistently update payment status of a payroll item in Supabase and log to audit
+   * ডাটাবেজে বেতন পরিশোধের স্ট্যাটাস পরিবর্তন করা (Persistent DB Write & Audit Log)
    */
   static async togglePaymentStatus(
     payrollItemId: string,
@@ -267,7 +267,7 @@ export class PayrollService {
   ): Promise<void> {
     const paidAt = isPaid ? new Date().toISOString() : null;
 
-    // 1. Update database
+    // ১. payroll_items টেবিলে পার্মানেন্ট কলাম আপডেট
     const { error: updateErr } = await db.payroll_items()
       .update({
         is_paid: isPaid,
@@ -278,7 +278,7 @@ export class PayrollService {
 
     if (updateErr) throw updateErr;
 
-    // 2. Fetch employee details for audit logs
+    // ২. অডিট লগের বিবরণীর জন্য কর্মচারীর নাম ও কোড বের করা
     const { data: itemData, error: fetchErr } = await db.payroll_items()
       .select('*, employees(full_name, employee_code)')
       .eq('id', payrollItemId)
@@ -289,11 +289,12 @@ export class PayrollService {
     const empName = itemData.employees?.full_name || 'কর্মচারী';
     const empCode = itemData.employees?.employee_code || 'N/A';
 
-    // 3. Save to system audit logs
+    // ৩. অডিট লগে স্থায়ীভাবে ট্র্যাকার সংরক্ষণ করা
     await db.audit_logs().insert({
       table_name: 'payroll_items',
       record_id: payrollItemId,
       action_type: 'UPDATE',
+      old_values: { is_paid: !isPaid },
       new_values: { is_paid: isPaid, paid_at: paidAt },
       change_reason: isPaid
         ? `${empName} (${empCode}) এর বেতন পরিশোধ করা হয়েছে।`
