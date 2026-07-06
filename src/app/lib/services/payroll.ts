@@ -53,11 +53,11 @@ export class PayrollService {
         continue;
       }
 
-      // খ. ওই নির্দিষ্ট দিনের জন্য কার্যকর স্ট্যাটাস খুঁজে বের করা
+      // খ. ওই নির্দিষ্ট দিনের জন্য কার্যকর স্ট্যাটাস খুঁজে বের করা (টাইমজোন-সেফ স্ট্রিং তুলনা)
       const activeStatus = history.find((record) => {
-        const recordStart = new Date(record.start_date);
-        const recordEnd = record.end_date ? new Date(record.end_date) : null;
-        return currentDay >= recordStart && (!recordEnd || currentDay <= recordEnd);
+        const recordStartStr = record.start_date;
+        const recordEndStr = record.end_date || '9999-12-31'; // চলমান স্ট্যাটাসের জন্য একটি বড় তারিখ
+        return currentDayStr >= recordStartStr && currentDayStr <= recordEndStr;
       });
 
       // গ. স্ট্যাটাস যদি 'leave' বা ছুটি হয় এবং তা যদি 'unpaid' (অবৈতনিক) বা 'suspension' হয়, তবে অনুপস্থিত
