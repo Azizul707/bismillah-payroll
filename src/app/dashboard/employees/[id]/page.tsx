@@ -85,13 +85,13 @@ export default function EmployeeProfilePage({ params }: PageProps) {
       if (currentUserStr) {
         try {
           const parsed = JSON.parse(currentUserStr);
-          return `${parsed.role === 'owner' ? 'মালিক' : 'ম্যানেজার'} ${parsed.name}`;
+          return `${parsed.role === 'owner' ? '' : 'Manager'} ${parsed.name}`;
         } catch (e) {
           console.error('Error parsing session user:', e);
         }
       }
     }
-    return 'এডিটর ম্যানেজার';
+    return 'Editor Manager';
   }, []);
 
   // প্রোফাইল ডাটা লোড ফাংশন (মেমোইজড ও অ্যাসিনক্রোনাস মাইক্রোটাস্ক হ্যান্ডলার)
@@ -445,7 +445,7 @@ export default function EmployeeProfilePage({ params }: PageProps) {
               className="col-span-2 flex items-center justify-center gap-2 rounded-xl border border-gray-200 py-3 text-center hover:bg-gray-50 text-sm font-semibold text-gray-700 transition-colors cursor-pointer"
             >
               <Pencil className="h-4 w-4" />
-              <span>{"정보 변경"}</span>
+              <span>{"Edit Profile"}</span>
             </button>
 
             {/* প্রোফাইল ডিলিট করার বাটন */}
@@ -454,7 +454,7 @@ export default function EmployeeProfilePage({ params }: PageProps) {
               className="col-span-2 flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 py-3 text-center text-sm font-semibold text-red-700 transition-colors cursor-pointer"
             >
               <Trash2 className="h-4 w-4" />
-              <span>{"প্রোফাইল ডিলিট করুন"}</span>
+        <span>{"DELETE PROFILE"}</span>
             </button>
           </div>
         </div>
@@ -474,7 +474,7 @@ export default function EmployeeProfilePage({ params }: PageProps) {
             ) : (
               timeline.map((item) => (
                 <div key={item.id} className="flex gap-4 border-l-2 border-gray-100 pl-4 pb-2 relative">
-                  <div className={`absolute -left-[7px] top-1.5 h-3 w-3 rounded-full ${
+                  <div className={`absolute -left-7px top-1.5 h-3 w-3 rounded-full ${
                     item.status === 'active' ? 'bg-green-500' : 'bg-amber-500'
                   }`} />
                   <div className="text-base font-semibold text-gray-700">
