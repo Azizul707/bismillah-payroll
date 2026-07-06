@@ -2,6 +2,16 @@ import { db } from '@/app/lib/supabase/client';
 import { EmployeeStatusHistory } from '@/app/lib/supabase/types';
 import { AuditService } from './audit';
 
+// Timezone-independent utility to subtract 1 day from YYYY-MM-DD
+function getDayBefore(dateStr: string): string {
+  const date = new Date(dateStr + 'T00:00:00');
+  date.setDate(date.getDate() - 1);
+  const d = String(date.getDate()).padStart(2, '0');
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const y = date.getFullYear();
+  return `${y}-${m}-${d}`;
+}
+
 export class LeaveService {
   /**
    * কর্মচারীর ছুটি শুরু করা (ছুটি শুরু করুন)
@@ -23,14 +33,15 @@ export class LeaveService {
 
     if (fetchError) throw fetchError;
 
-    const startDateObj = new Date(params.startDate);
-    const dayBefore = new Date(startDateObj);
-    dayBefore.setDate(startDateObj.getDate() - 1);
-    const dayBeforeStr = dayBefore.toISOString().split('T')[0];
+    const dayBeforeStr = getDayBefore(params.startDate);
 
     if (currentTimeline) {
+      const startStr = currentTimeline.start_date;
+      // 🛡️ Defensive Check: end_date can never be less than start_date
+      const targetEndDate = dayBeforeStr >= startStr ? dayBeforeStr : startStr;
+
       const { error: updateError } = await db.employee_status_history()
-        .update({ end_date: dayBeforeStr })
+        .update({ end_date: targetEndDate })
         .eq('id', currentTimeline.id);
 
       if (updateError) throw updateError;
@@ -91,14 +102,15 @@ export class LeaveService {
 
     if (fetchError) throw fetchError;
 
-    const resumeDateObj = new Date(params.resumeDate);
-    const dayBefore = new Date(resumeDateObj);
-    dayBefore.setDate(resumeDateObj.getDate() - 1);
-    const dayBeforeStr = dayBefore.toISOString().split('T')[0];
+    const dayBeforeStr = getDayBefore(params.resumeDate);
 
     if (currentTimeline) {
+      const startStr = currentTimeline.start_date;
+      // 🛡️ Defensive Check: end_date can never be less than start_date
+      const targetEndDate = dayBeforeStr >= startStr ? dayBeforeStr : startStr;
+
       const { error: updateError } = await db.employee_status_history()
-        .update({ end_date: dayBeforeStr })
+        .update({ end_date: targetEndDate })
         .eq('id', currentTimeline.id);
 
       if (updateError) throw updateError;

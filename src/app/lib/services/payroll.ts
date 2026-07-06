@@ -4,40 +4,32 @@ import { AuditService } from './audit';
 
 export class PayrollService {
   /**
-   * নির্দিষ্ট মাস ও বছরের জন্য নির্দিষ্ট কর্মচারীর উপস্থিত দিন (Duty Days) এবং অনুপস্থিত দিন হিসেব করা
+   * নির্দিষ্ট মাস ও বছরের জন্য নির্দিষ্ট কর্মচারীর উপস্থিত দিন (Duty Days) এবং অনুপস্থিত দিন হিসেব করা (টাইমজোন-সেফ)
    */
   static async calculateDutyDays(
     employeeId: string,
-    joiningDate: string,
+    joiningDate: string, // YYYY-MM-DD
     month: string, // '01' - '12'
-    year: string,  // '2026'
-    preFetchedHistory?: EmployeeStatusHistory[]
+    year: string   // '2026'
   ): Promise<{ dutyDays: number; absentDays: number }> {
-    const startOfMonth = new Date(`${year}-${month}-01`);
     const endOfMonth = new Date(parseInt(year, 10), parseInt(month, 10), 0);
-    const totalDaysInMonth = endOfMonth.getDate(); // ক্যালেন্ডার মাসের আসল দিন (২৮, ৩০ বা ৩১)
+    const totalDaysInMonth = endOfMonth.getDate(); // ক্যালেন্ডার মাসের আসল দিন
 
-    // কর্মচারীর যোগদানের তারিখ এবং মাসের দিনগুলোর তুলনা করা
-    const joinDateObj = new Date(joiningDate);
+    const endOfMonthStr = `${year}-${month}-${String(totalDaysInMonth).padStart(2, '0')}`;
 
     // ১. কর্মচারী যদি এই মাসের পর জয়েন করেন, তবে ডিউটি দিন ০
-    if (joinDateObj > endOfMonth) {
+    if (joiningDate > endOfMonthStr) {
       return { dutyDays: 0, absentDays: 30 };
     }
 
-    // ২. (Sprint 2)าย ফেচ করা হিস্ট্রি ব্যবহার করা হবে, নাহলে আলাদা কোয়েরি করা হবে
-    let history: EmployeeStatusHistory[];
-    if (preFetchedHistory && preFetchedHistory.length > 0) {
-      history = preFetchedHistory;
-    } else {
-      const { data: timelineData, error } = await db.employee_status_history()
-        .select('*')
-        .eq('employee_id', employeeId)
-        .order('start_date', { ascending: true });
+    // ২. কর্মচারীর স্ট্যাটাস হিস্টোরি বা টাইমলাইন আনা
+    const { data: timelineData, error } = await db.employee_status_history()
+      .select('*')
+      .eq('employee_id', employeeId)
+      .order('start_date', { ascending: true });
 
-      if (error) throw error;
-      history = (timelineData as unknown as EmployeeStatusHistory[]) || [];
-    }
+    if (error) throw error;
+    const history = (timelineData as unknown as EmployeeStatusHistory[]) || [];
 
     let absentDays = 0;
     let missedDaysDueToJoining = 0;
@@ -45,19 +37,18 @@ export class PayrollService {
     // ৩. মাস জুড়ে প্রতিদিনের স্ট্যাটাস চেক করা (অ্যালগরিদম লুপ)
     for (let day = 1; day <= totalDaysInMonth; day++) {
       const currentDayStr = `${year}-${month}-${String(day).padStart(2, '0')}`;
-      const currentDay = new Date(currentDayStr);
 
       // ক. কর্মচারীর জয়েনিং ডেটের আগের দিনগুলো "missed days" হিসেবে গণ্য হবে
-      if (currentDay < joinDateObj) {
+      if (currentDayStr < joiningDate) {
         missedDaysDueToJoining++;
         continue;
       }
 
       // খ. ওই নির্দিষ্ট দিনের জন্য কার্যকর স্ট্যাটাস খুঁজে বের করা (টাইমজোন-সেফ স্ট্রিং তুলনা)
       const activeStatus = history.find((record) => {
-        const recordStartStr = record.start_date;
-        const recordEndStr = record.end_date || '9999-12-31'; // চলমান স্ট্যাটাসের জন্য একটি বড় তারিখ
-        return currentDayStr >= recordStartStr && currentDayStr <= recordEndStr;
+        const start = record.start_date; // YYYY-MM-DD
+        const end = record.end_date || '9999-12-31'; // YYYY-MM-DD
+        return currentDayStr >= start && currentDayStr <= end;
       });
 
       // গ. স্ট্যাটাস যদি 'leave' বা ছুটি হয় এবং তা যদি 'unpaid' (অবৈতনিক) বা 'suspension' হয়, তবে অনুপস্থিত
@@ -69,7 +60,6 @@ export class PayrollService {
     }
 
     // ৪. ৩০ দিনের ধ্রুবক নিয়ম (30-day Constant Divisor Rule) অনুযায়ী সমন্বয়
-    // মোট বাদ যাওয়া দিন = অবৈতনিক ছুটির দিন + জয়েনিং ডেটের আগের দিনসমূহ
     const totalDeductedDays = absentDays + missedDaysDueToJoining;
     const dutyDays = Math.max(0, 30 - totalDeductedDays);
 
@@ -143,15 +133,7 @@ export class PayrollService {
 
     if (empError) throw empError;
 
-    // ৫. (Sprint 2) সব কর্মচারীদের জন্য স্ট্যাটাস হিস্ট্রি এআর এ অ compulsori bulk fetch
-    const employeeIds = (employees || []).map(e => e.id);
-    const { data: allHistory, error: historyError } = await db.employee_status_history()
-      .select('*')
-      .in('employee_id', employeeIds);
-
-    if (historyError) throw historyError;
-
-    // ৬. (Sprint 2) সব কর্মচারীদের জন্য অগ্রিম টেবিল থেকে একসাথে bulk fetch
+    // ৫. (Sprint 2) সব কর্মচারীদের জন্য অগ্রিম টেবিল থেকে একসাথে bulk fetch
     const { data: advData, error: advError } = await db.salary_advances()
       .select('*')
       .eq('advance_month', month)
@@ -163,13 +145,12 @@ export class PayrollService {
 
     // ৭. প্রতিটি কর্মচারীর বেতন হিসাব করা (in-memory filtering)
     for (const emp of employees) {
-      // ক. ডিউটি এবং অনুপস্থিত দিন হিসেব (pre-fetched history pass করা হয়েছে)
+      // ক. ডিউটি এবং অনুপস্থিত দিন হিসেব (টাইমজোন-সেফ স্ট্রিং তুলনা)
       const { dutyDays, absentDays } = await this.calculateDutyDays(
         emp.id,
         emp.joining_date,
         month,
-        year,
-        (allHistory as unknown as EmployeeStatusHistory[]) || []
+        year
       );
 
       // খ. বোনাস দিন হিসেব
