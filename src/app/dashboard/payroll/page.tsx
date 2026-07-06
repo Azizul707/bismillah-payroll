@@ -60,18 +60,6 @@ function formatPaymentDate(isoString: string | null): string {
 }
 
 // বর্তমান প্রಯোগকারীর নাম বের করা
-function getCurrentUserName(): string {
-  try {
-    const raw = localStorage.getItem('bismillah_current_user');
-    if (raw) {
-      const user = JSON.parse(raw);
-      return user.fullName || 'অজ্ঞাত';
-    }
-  } catch {
-    // ignore
-  }
-  return 'অজ্ঞাত';
-}
 
 interface ExtendedPayrollItem extends PayrollItem {
   employees: { 
@@ -267,16 +255,29 @@ export default function PayrollPage() {
     }
   }
 
-  // বেতন পরিশোধ স্ট্যাটাস টগল হ্যান্ডলার
-  async function handleTogglePayment(itemId: string, currentStatus: boolean) {
+  // বেতন পরিশোধ করার বোতামের হ্যান্ডলার ফাংশন (DB-First Sync)
+  async function handleTogglePayment(itemId: string, currentPaidStatus: boolean) {
     try {
-      setUpdatingPaymentId(itemId);
-      const newStatus = !currentStatus;
-      await PayrollService.togglePaymentStatus(itemId, newStatus, getCurrentUserName());
-      await loadPayrollData();
+      const newStatus = !currentPaidStatus;
+      const adminName = typeof window !== 'undefined' ? (localStorage.getItem('bismillah_current_user')
+        ? JSON.parse(localStorage.getItem('bismillah_current_user')!).name : 'মালিক ইউজার') : 'মালিক ইউজার';
+
+      // ১. ডাটাবেজে পার্মানেন্ট রাইট পাঠানো হলো
+      await PayrollService.togglePaymentStatus(itemId, newStatus, adminName);
+
+      // ২. ডাটাবেজে সফলভাবে সেভ হওয়ার পরই কেবল স্ক্রিনের স্টেট আপডেট হবে
+      setPayrollItems((prev) =>
+        prev.map((item) =>
+          item.id === itemId
+            ? { ...item, is_paid: newStatus, paid_at: newStatus ? new Date().toISOString() : null }
+            : item
+        )
+      );
+
+      alert(newStatus ? 'বেতন পরিশোধ সফল হয়েছে।' : 'বেতন পরিশোধ বাতিল করা হয়েছে।');
     } catch (err: unknown) {
-      console.error(err);
-      alert(err instanceof Error ? err.message : 'পেমেন্ট স্ট্যাটাস পরিবর্তনে সমস্যা হয়েছে।');
+      console.error('Payment Save Error:', err);
+      alert('ভুল: ডেটাবেজে পেমেন্ট স্ট্যাটাস সেভ করা যায়নি! অনুগ্রহ করে Supabase SQL Editor-এ কলাম মাইগ্রেশনটি রান করুন।');
     } finally {
       setUpdatingPaymentId(null);
     }

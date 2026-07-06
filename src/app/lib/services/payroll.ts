@@ -258,7 +258,7 @@ export class PayrollService {
   }
 
   /**
-   * পে-রোল আইটেমের পেমেন্ট স্ট্যাটাস টগল করা এবং অডিট লগ সংরক্ষণ করা
+   * Persistently update payment status of a payroll item in Supabase and log to audit
    */
   static async togglePaymentStatus(
     payrollItemId: string,
@@ -267,37 +267,38 @@ export class PayrollService {
   ): Promise<void> {
     const paidAt = isPaid ? new Date().toISOString() : null;
 
-    // ১. পে-রোল আইটেম আপডেট
+    // 1. Update database
     const { error: updateErr } = await db.payroll_items()
       .update({
         is_paid: isPaid,
         paid_at: paidAt,
-        paid_by_name: isPaid ? adminName : null,
+        paid_by_name: isPaid ? adminName : null
       })
       .eq('id', payrollItemId);
 
     if (updateErr) throw updateErr;
 
-    // ২. কর্মচারীর বিবরণ আনতে
-    const { data: itemData } = await db.payroll_items()
+    // 2. Fetch employee details for audit logs
+    const { data: itemData, error: fetchErr } = await db.payroll_items()
       .select('*, employees(full_name, employee_code)')
       .eq('id', payrollItemId)
-      .maybeSingle();
+      .single();
 
-    const empName = itemData?.employees?.full_name || 'কর্মচারী';
-    const empCode = itemData?.employees?.employee_code || 'N/A';
+    if (fetchErr || !itemData) return;
 
-    // ৩. অডিট লগ সংরক্ষণ
-    await AuditService.logChange({
-      tableName: 'payroll_items',
-      recordId: payrollItemId,
-      actionType: 'UPDATE',
-      newValues: { is_paid: isPaid, paid_at: paidAt },
-      changeReason: isPaid
+    const empName = itemData.employees?.full_name || 'কর্মচারী';
+    const empCode = itemData.employees?.employee_code || 'N/A';
+
+    // 3. Save to system audit logs
+    await db.audit_logs().insert({
+      table_name: 'payroll_items',
+      record_id: payrollItemId,
+      action_type: 'UPDATE',
+      new_values: { is_paid: isPaid, paid_at: paidAt },
+      change_reason: isPaid
         ? `${empName} (${empCode}) এর বেতন পরিশোধ করা হয়েছে।`
         : `${empName} (${empCode}) এর বেতন পরিশোধ বাতিল করা হয়েছে।`,
-      createdBy: '00000000-0000-0000-0000-000000000000',
-      createdByName: adminName,
+      created_by_name: adminName
     });
   }
 }
