@@ -75,11 +75,11 @@ export function DashboardSidebar() {
   return (
     <>
       {/* মোবাইল হেডার (মোবাইল-ফার্স্ট ডিজাইন) */}
-      <header className="flex h-16 items-center justify-between border-b bg-[#8B0000] px-4 text-white md:hidden">
-        <span className="text-xl font-bold tracking-wider">{"বিসমিল্লাহ"}</span>
-        <button 
-          onClick={toggleSidebar} 
-          className="rounded-md p-1 hover:bg-[#F4C430] hover:text-black focus:outline-none cursor-pointer"
+      <header className="flex h-16 items-center justify-between border-b bg-[--color-primary] px-4 text-white md:hidden">
+        <span className="font-bengali text-xl font-bold tracking-wider">{"বিসমিল্লাহ"}</span>
+        <button
+          onClick={toggleSidebar}
+          className="rounded-md p-1 hover:bg-[--color-accent] hover:text-[--color-primary-dark] focus:outline-none cursor-pointer"
           aria-label="মেনু খুলুন"
         >
           {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -96,13 +96,13 @@ export function DashboardSidebar() {
 
       {/* সাইডবার মেনু মেইন বডি */}
       <aside className={`
-        fixed bottom-0 top-16 z-50 flex w-64 flex-col border-r bg-white transition-transform duration-300 md:top-0
+        fixed bottom-0 top-16 z-50 flex w-64 flex-col border-r border-[--color-border] bg-[--color-surface] transition-transform duration-300 md:top-0
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         md:sticky md:h-screen md:translate-x-0 md:z-30
       `}>
         {/* ডেক্সটপ লোগো এরিয়া */}
-        <div className="hidden h-20 items-center justify-center border-b bg-[#8B0000] md:flex">
-          <h1 className="text-2xl font-black tracking-widest text-white">{"বিসমিল্লাহ"}</h1>
+        <div className="hidden h-20 items-center justify-center border-b border-[--color-border] bg-[--color-primary] md:flex">
+          <h1 className="font-bengali text-2xl font-black tracking-widest text-white">{"বিসমিল্লাহ"}</h1>
         </div>
 
         {/* নেভিগেশন লিংকসমূহ */}
@@ -116,14 +116,11 @@ export function DashboardSidebar() {
                 href={item.path}
                 onClick={() => setIsOpen(false)}
                 className={`
-                  flex items-center gap-3 rounded-lg px-4 py-3.5 text-base font-bold transition-all duration-150
-                  ${isActive 
-                    ? 'bg-[#8B0000] text-white shadow-md' 
-                    : 'text-gray-700 hover:bg-[#F4C430]/20 hover:text-black'
-                  }
+                  sidebar-link
+                  ${isActive ? 'active' : ''}
                 `}
               >
-                <Icon className={`h-5 w-5 ${isActive ? 'text-[#F4C430]' : 'text-gray-500'}`} />
+                <Icon className={`h-5 w-5 ${isActive ? 'text-[--color-accent]' : 'text-[--color-foreground-muted]'}`} />
                 <span>{item.name}</span>
               </Link>
             );
@@ -132,10 +129,10 @@ export function DashboardSidebar() {
 
         {/* প্রবেশকৃত ইউজারের প্রোফাইল ব্যাজ */}
         {currentUser && (
-          <div className="mx-4 mb-2 p-3 rounded-lg bg-gray-50 border border-gray-100 flex flex-col gap-1 animate-in fade-in duration-200">
-            <span className="text-xs font-bold text-gray-400">{"প্রবেশকৃত ইউজার:"}</span>
-            <span className="text-sm font-black text-gray-900">{currentUser.name}</span>
-            <span className="inline-block text-[10px] font-black w-fit px-2.5 py-0.5 rounded-full bg-[#8B0000]/10 text-[#8B0000]">
+          <div className="mx-4 mb-2 p-3 rounded-lg bg-[--color-surface-raised] border border-[--color-border] flex flex-col gap-1 animate-in fade-in duration-200">
+            <span className="font-bengali text-xs font-bold text-[--color-foreground-muted]">{"প্রবেশকৃত ইউজার:"}</span>
+            <span className="font-bengali text-sm font-black text-[--color-foreground]">{currentUser.name}</span>
+            <span className="inline-block font-bengali text-[10px] font-black w-fit px-2.5 py-0.5 rounded-full bg-[--color-primary]/10 text-[--color-primary]">
               {currentUser.role === 'owner' ? '(Owner)' : '(Manager)'}
             </span>
           </div>
@@ -145,7 +142,7 @@ export function DashboardSidebar() {
         <div className="border-t p-4">
           <button
             onClick={handleLogout}
-            className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-base font-bold text-red-600 transition-colors hover:bg-red-50 cursor-pointer"
+            className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-base font-bold text-[--color-danger] transition-colors hover:bg-[--color-surface-raised] cursor-pointer"
           >
             <LogOut className="h-5 w-5" />
             <span>{"লগআউট করুন"}</span>

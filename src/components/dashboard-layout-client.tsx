@@ -118,7 +118,7 @@ export function DashboardLayoutClient({ children }: DashboardLayoutClientProps) 
         <div className="p-3 border-t border-[--color-border]">
           <button
             onClick={handleLogout}
-            className="flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-[--color-danger] transition-colors hover:bg-red-50 cursor-pointer"
+            className="flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-[--color-danger] transition-colors hover:bg-[--color-surface-raised] cursor-pointer"
           >
             <LogOut className="h-4 w-4" />
             <span className="font-bengali">{"লগআউট"}</span>
@@ -176,7 +176,7 @@ export function DashboardLayoutClient({ children }: DashboardLayoutClientProps) 
         <div className="p-3 border-t border-[--color-border]">
           <button
             onClick={handleLogout}
-            className="flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-[--color-danger] transition-colors hover:bg-red-50 cursor-pointer"
+            className="flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-[--color-danger] transition-colors hover:bg-[--color-surface-raised] cursor-pointer"
           >
             <LogOut className="h-4 w-4" />
             <span className="font-bengali">{"লগআউট"}</span>

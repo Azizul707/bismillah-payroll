@@ -317,18 +317,18 @@ export default function PayrollPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b pb-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-black text-[--color-foreground]">{"বেতন ও পে-রোল হিসাব"}</h1>
-          <p className="text-sm font-bold text-gray-500 mt-1">{"মাসের বেতন হিসাব এবং লক/আনলক কন্ট্রোল"}</p>
+          <p className="text-sm font-bold text-[--color-foreground-muted] mt-1">{"মাসের বেতন হিসাব এবং লক/আনলক কন্ট্রোল"}</p>
         </div>
       </div>
 
       {/* মাস ও বছর ফিল্টার এরিয়া */}
-      <div className="rounded-xl border border-[--color-border] bg-[--color-surface] p-5 shadow-sm flex flex-col sm:flex-row items-center gap-4 text-base font-bold text-gray-700">
+      <div className="glass p-5 shadow-sm flex flex-col sm:flex-row items-center gap-4 text-base font-bold">
         <div className="flex flex-col w-full sm:w-auto gap-1">
-          <label className="text-sm text-gray-400">{"বেতন মাস"}</label>
+          <label className="text-sm text-[--color-foreground-muted]">{"বেতন মাস"}</label>
           <select
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
-            className="rounded-lg border p-2.5 font-bold focus:outline-none focus:border-[#8B0000]"
+            className="input-field font-bold focus:outline-none"
           >
             {bengaliMonths.map(m => (
               <option key={m.code} value={m.code}>{m.name}</option>
@@ -337,11 +337,11 @@ export default function PayrollPage() {
         </div>
 
         <div className="flex flex-col w-full sm:w-auto gap-1">
-          <label className="text-sm text-gray-400">{"বেতন বছর"}</label>
+          <label className="text-sm text-[--color-foreground-muted]">{"বেতন বছর"}</label>
           <select
             value={selectedYear}
             onChange={(e) => setSelectedYear(e.target.value)}
-            className="rounded-lg border p-2.5 font-bold focus:outline-none focus:border-[#8B0000]"
+            className="input-field font-bold focus:outline-none"
           >
             {years.map(y => (
               <option key={y} value={y}>{y}</option>
@@ -354,13 +354,13 @@ export default function PayrollPage() {
             <button
               onClick={handleGeneratePayroll}
               disabled={generating}
-              className="flex items-center justify-center gap-2 w-full sm:w-auto rounded-lg bg-[--color-primary] hover:bg-[--color-primary]/90 text-white px-5 py-3 shadow transition-colors cursor-pointer"
+              className="btn-primary w-full sm:w-auto"
             >
               <RefreshCw className={`h-5 w-5 ${generating ? 'animate-spin' : ''}`} />
               <span>{generating ? 'হিসাব তৈরি হচ্ছে...' : 'বেতন হিসাব তৈরি করুন'}</span>
             </button>
           ) : (
-            <div className="flex items-center gap-2 rounded-lg bg-green-50 border border-green-200 text-green-700 px-5 py-3">
+            <div className="flex items-center gap-2 rounded-lg bg-[--color-success]/[0.08] border border-[--color-success]/[0.2] text-[--color-success] px-5 py-3">
               <CheckCircle2 className="h-5 w-5" />
               <span>{"এই মাসের বেতন সম্পন্ন হয়েছে।"}</span>
             </div>
@@ -371,19 +371,19 @@ export default function PayrollPage() {
       {/* মাসের স্ট্যাটাস অ্যালার্ট (লকড নাকি ড্রাফট) */}
       {payroll && (
         <div className={`rounded-xl border p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${
-          payroll.is_locked 
-            ? 'bg-green-50 border-green-200 text-green-900' 
-            : 'bg-[--color-accent]/10 border-[#F4C430]/30 text-amber-900'
+          payroll.is_locked
+            ? 'bg-[--color-primary]/[0.08] border-[--color-primary]/[0.2] text-[--color-foreground]'
+            : 'bg-[--color-accent]/[0.08] border-[--color-accent]/[0.2] text-[--color-foreground]'
         }`}>
           <div className="flex items-start gap-3">
-            <AlertCircle className={`h-6 w-6 mt-0.5 ${payroll.is_locked ? 'text-green-600' : 'text-amber-600'}`} />
+            <AlertCircle className={`h-6 w-6 mt-0.5 ${payroll.is_locked ? 'text-[--color-primary]' : 'text-[--color-accent-dark]'}`} />
             <div className="text-base font-bold">
               <p className="font-black text-lg">
                 {payroll.is_locked ? 'মাসের বেতন হিসেব সম্পূর্ণ লকড' : 'হিসেব খসড়া (Draft) অবস্থায় আছে'}
               </p>
-              <p className="text-sm text-gray-500 mt-1">
-                {payroll.is_locked 
-                  ? 'মালিক কর্তৃক হিসাব লক করা হয়েছে। নতুন কোনো অগ্রিম, কাজ বা বেতন পরিবর্তন করা যাবে না।' 
+              <p className="text-sm text-[--color-foreground-muted] mt-1">
+                {payroll.is_locked
+                  ? 'মালিক কর্তৃক হিসাব লক করা হয়েছে। নতুন কোনো অগ্রিম, কাজ বা বেতন পরিবর্তন করা যাবে না।'
                   : 'আপনি এখন কর্মচারীদের অগ্রিম বা নতুন কাজের তথ্য যুক্ত করতে পারেন। সব কাজ শেষে ওনার হিসাব লক করবেন।'}
               </p>
             </div>
@@ -393,7 +393,7 @@ export default function PayrollPage() {
             {payroll.is_locked ? (
               <button
                 onClick={() => { setIsUnlockModalOpen(true); setUnlockReason(''); setModalError(''); }}
-                className="flex items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 px-4 py-2.5 text-sm font-black transition-colors cursor-pointer"
+                className="flex items-center justify-center gap-2 rounded-lg border border-[--color-danger]/[0.2] bg-[--color-danger]/[0.08] hover:bg-[--color-danger]/[0.15] text-[--color-danger] px-4 py-2.5 text-sm font-black transition-colors cursor-pointer"
               >
                 <Unlock className="h-4 w-4" />
                 <span>{"বেতন হিসাব আনলক করুন"}</span>
@@ -414,30 +414,30 @@ export default function PayrollPage() {
 
       {/* সার্চ ও ফিল্টার সেকশন (শুধুমাত্র তখনই দৃশ্যমান হবে যখন ডেটা থাকবে) */}
       {payrollItems.length > 0 && (
-        <div className="rounded-xl border border-[--color-border] bg-[--color-surface] p-4 shadow-sm flex flex-col md:flex-row items-center gap-4">
+        <div className="glass p-4 shadow-sm flex flex-col md:flex-row items-center gap-4 no-print">
           {/* সার্চ ইনপুট */}
           <div className="relative flex-1 w-full">
-            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
-              <Search className="h-5 w-5" />
+            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-[--color-foreground-muted]">
+              <Search className="h-5 w-5 text-[--color-foreground-muted]" />
             </span>
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="কর্মচারীর নাম, কোড, মোবাইল বা ক্যাটাগরি দিয়ে খুঁজুন..."
-              className="w-full rounded-lg border border-[--color-border] pl-10 pr-4 py-2.5 font-bold text-gray-700 placeholder-gray-400 focus:outline-none focus:border-[#8B0000] focus:ring-1 focus:ring-[#8B0000] text-sm"
+              className="input-field w-full pl-10 pr-4 py-2.5 font-bold text-[--color-foreground] placeholder:text-[--color-foreground-muted] focus:outline-none text-sm"
             />
           </div>
 
           {/* ক্যাটাগরি ড্রপডাউন */}
           <div className="flex items-center gap-2 w-full md:w-auto min-w-[220px]">
-            <span className="text-gray-400 shrink-0">
-              <SlidersHorizontal className="h-5 w-5" />
+            <span className="text-[--color-foreground-muted] shrink-0">
+              <SlidersHorizontal className="h-5 w-5 text-[--color-foreground-muted]" />
             </span>
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full rounded-lg border border-[--color-border] p-2.5 font-bold text-gray-700 focus:outline-none focus:border-[#8B0000] text-sm"
+              className="input-field w-full p-2.5 font-bold text-[--color-foreground] focus:outline-none text-sm"
             >
               <option value="all">{"সকল ক্যাটাগরি"}</option>
               {categoryCache.data.map((cat) => (
@@ -453,7 +453,7 @@ export default function PayrollPage() {
       {/* পেমেন্ট স্ট্যাটাস ফিল্টার ট্যাব (শুধুমাত্র ডেটা থাকলে দেখানো) */}
       {payrollItems.length > 0 && (
         <div className="flex items-center gap-2 text-base font-bold">
-          <span className="text-sm text-gray-400 mr-1">{"পেমেন্ট:"}</span>
+          <span className="text-sm text-[--color-foreground-muted] mr-1">{"পেমেন্ট:"}</span>
           {[
             { key: 'all', label: 'সবাই' },
             { key: 'paid', label: 'পরিশোধিত' },
@@ -464,8 +464,10 @@ export default function PayrollPage() {
               onClick={() => setPaymentFilter(tab.key as 'all' | 'paid' | 'unpaid')}
               className={`px-4 py-2 rounded-lg text-sm font-black transition-all duration-150 cursor-pointer ${
                 paymentFilter === tab.key
-                  ? 'bg-[--color-primary] text-white shadow'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? tab.key === 'paid'
+                    ? 'bg-[--color-success]/[0.12] text-[--color-success]'
+                    : 'bg-[--color-primary] text-white shadow'
+                  : 'bg-[--color-surface-raised] text-[--color-foreground-muted] hover:bg-[--color-border]'
               }`}
             >
               {tab.label}
@@ -479,18 +481,18 @@ export default function PayrollPage() {
         <div className="rounded-xl border border-[--color-border] bg-[--color-surface] shadow-sm overflow-hidden">
           <table className="w-full border-collapse text-left">
             <thead>
-              <tr className="border-b bg-gray-50 text-sm font-black text-gray-700">
-                <th className="p-4">{"কোড ও নাম"}</th>
-                <th className="p-4">{"মূল বেতন"}</th>
-                <th className="p-4">{"দৈনিক বেতন"}</th>
-                <th className="p-4">{"উপস্থিত দিন"}</th>
-                <th className="p-4">{"অনুপস্থিত দিন"}</th>
-                <th className="p-4">{"বোনাস দিন"}</th>
-                <th className="p-4">{"মোট (Gross)"}</th>
-                <th className="p-4">{"অগ্রিম সমন্বয়"}</th>
-                <th className="p-4 font-black text-[--color-primary]">{"নিট বেতন"}</th>
-                <th className="p-4 text-center">{"পরিশোধ"}</th>
-                <th className="p-4 text-center">{"রসিদ"}</th>
+              <tr className="border-b bg-[--color-surface-raised] text-sm font-black text-[--color-foreground]">
+                <th className="p-4 font-bengali">{"কোড ও নাম"}</th>
+                <th className="p-4 font-bengali">{"মূল বেতন"}</th>
+                <th className="p-4 font-bengali">{"দৈনিক বেতন"}</th>
+                <th className="p-4 font-bengali">{"উপস্থিত দিন"}</th>
+                <th className="p-4 font-bengali">{"অনুপস্থিত দিন"}</th>
+                <th className="p-4 font-bengali">{"বোনাস দিন"}</th>
+                <th className="p-4 font-bengali">{"মোট (Gross)"}</th>
+                <th className="p-4 font-bengali">{"অগ্রিম সমন্বয়"}</th>
+                <th className="p-4 font-bengali font-black text-[--color-primary]">{"নিট বেতন"}</th>
+                <th className="p-4 text-center font-bengali">{"পরিশোধ"}</th>
+                <th className="p-4 text-center font-bengali">{"রসিদ"}</th>
               </tr>
             </thead>
             <tbody className="divide-y text-base font-bold text-[--color-foreground]">
@@ -498,7 +500,7 @@ export default function PayrollPage() {
                 <tr key={i} className="animate-pulse">
                   {Array.from({ length: 11 }).map((_, j) => (
                     <td key={j} className="p-4">
-                      <div className="h-4 bg-gray-100 rounded w-full" />
+                      <div className="h-4 bg-[--color-border] rounded w-full" />
                     </td>
                   ))}
                 </tr>
@@ -509,74 +511,74 @@ export default function PayrollPage() {
       }>
         {loading ? (
         <div className="text-center py-12">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#8B0000] border-t-transparent mx-auto"></div>
-          <p className="mt-4 font-bold text-gray-500">{"তথ্য খোঁজা হচ্ছে..."}</p>
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-[--color-primary] border-t-transparent mx-auto"></div>
+          <p className="mt-4 font-bold text-[--color-foreground-muted]">{"তথ্য খোঁজা হচ্ছে..."}</p>
         </div>
       ) : payrollItems.length === 0 ? (
-        <div className="rounded-xl border border-[--color-border] bg-[--color-surface] p-12 text-center text-gray-400 shadow-sm">
-          <CreditCard className="h-12 w-12 mx-auto text-gray-300" />
-          <p className="mt-4 text-lg font-bold">{"এই মাসের কোনো বেতন হিসেব এখনও তৈরি করা হয়নি।"}</p>
-          <p className="text-sm font-bold text-gray-400 mt-1">{"বেতন তৈরি করতে উপরের বোতামটি চাপুন।"}</p>
+        <div className="glass p-12 text-center text-[--color-foreground-muted] shadow-sm">
+          <CreditCard className="h-12 w-12 mx-auto text-[--color-foreground-muted]" />
+          <p className="mt-4 text-lg font-bold text-[--color-foreground]">{"এই মাসের কোনো বেতন হিসেব এখনও তৈরি করা হয়নি।"}</p>
+          <p className="text-sm font-bold text-[--color-foreground-muted] mt-1">{"বেতন তৈরি করতে উপরের বোতামটি চাপুন।"}</p>
         </div>
       ) : filteredPayrollItems.length === 0 ? (
         // সার্চ বা ফিল্টার করে ডেটা না পাওয়া গেলে
-        <div className="rounded-xl border border-[--color-border] bg-[--color-surface] p-12 text-center text-gray-400 shadow-sm">
-          <Search className="h-12 w-12 mx-auto text-gray-300" />
-          <p className="mt-4 text-lg font-bold">{"কোনো মিল পাওয়া যায়নি!"}</p>
-          <p className="text-sm font-bold text-gray-400 mt-1">{"দয়া করে সঠিক নাম, কোড, মোবাইল বা ক্যাটাগরি লিখে আবার চেষ্টা করুন।"}</p>
+        <div className="glass p-12 text-center text-[--color-foreground-muted] shadow-sm">
+          <Search className="h-12 w-12 mx-auto text-[--color-foreground-muted]" />
+          <p className="mt-4 text-lg font-bold text-[--color-foreground]">{"কোনো মিল পাওয়া যায়নি!"}</p>
+          <p className="text-sm font-bold text-[--color-foreground-muted] mt-1">{"দয়া করে সঠিক নাম, কোড, মোবাইল বা ক্যাটাগরি লিখে আবার চেষ্টা করুন।"}</p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-[--color-border] bg-[--color-surface] shadow-sm">
+        <div className="glass overflow-hidden">
           <table className="w-full border-collapse text-left">
             <thead>
-              <tr className="border-b bg-gray-50 text-sm font-black text-gray-700">
-                <th className="p-4">{"কোড ও নাম"}</th>
-                <th className="p-4">{"মূল বেতন"}</th>
-                <th className="p-4">{"দৈনিক বেতন"}</th>
-                <th className="p-4">{"উপস্থিত দিন"}</th>
-                <th className="p-4">{"অনুপস্থিত দিন"}</th>
-                <th className="p-4">{"বোনাস দিন"}</th>
-                <th className="p-4">{"মোট (Gross)"}</th>
-                <th className="p-4">{"অগ্রিম সমন্বয়"}</th>
-                <th className="p-4 font-black text-[--color-primary]">{"নিট বেতন"}</th>
-                <th className="p-4 text-center">{"পরিশোধ"}</th>
-                <th className="p-4 text-center">{"রসিদ"}</th>
+              <tr className="border-b bg-[--color-surface-raised] text-sm font-black text-[--color-foreground]">
+                <th className="p-4 font-bengali">{"কোড ও নাম"}</th>
+                <th className="p-4 font-bengali">{"মূল বেতন"}</th>
+                <th className="p-4 font-bengali">{"দৈনিক বেতন"}</th>
+                <th className="p-4 font-bengali">{"উপস্থিত দিন"}</th>
+                <th className="p-4 font-bengali">{"অনুপস্থিত দিন"}</th>
+                <th className="p-4 font-bengali">{"বোনাস দিন"}</th>
+                <th className="p-4 font-bengali">{"মোট (Gross)"}</th>
+                <th className="p-4 font-bengali">{"অগ্রিম সমন্বয়"}</th>
+                <th className="p-4 font-bengali font-black text-[--color-primary]">{"নিট বেতন"}</th>
+                <th className="p-4 text-center font-bengali">{"পরিশোধ"}</th>
+                <th className="p-4 text-center font-bengali">{"রসিদ"}</th>
               </tr>
             </thead>
             <tbody className="divide-y text-base font-bold text-[--color-foreground]">
               {filteredPayrollItems.map((item) => (
-                <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
+                <tr key={item.id} className="hover:bg-[--color-primary]/[0.02] transition-colors">
                   <td className="p-4">
                     <p className="font-black text-[--color-foreground]">{item.employees?.full_name}</p>
-                    <span className="text-xs font-black text-gray-400">
+                    <span className="text-xs font-black text-[--color-foreground-muted]">
                       {item.employees?.employee_code}
                       {item.employees?.categories?.category_name && ` | ${item.employees.categories.category_name}`}
                     </span>
                   </td>
-                  <td className="p-4">{item.monthly_salary} {"টাকা"}</td>
-                  <td className="p-4">{Math.round(item.daily_salary)} {"টাকা"}</td>
-                  <td className="p-4 text-green-700 font-black">{item.duty_days} {"দিন"}</td>
-                  <td className="p-4 text-red-600">{item.absent_days} {"দিন"}</td>
-                  <td className="p-4 text-blue-700 font-black">+{item.bonus_days} {"দিন"}</td>
-                  <td className="p-4 font-black">{item.gross_salary} {"টাকা"}</td>
-                  <td className="p-4 text-amber-700">-{item.advance_deducted} {"টাকা"}</td>
-                  <td className="p-4 font-black text-lg text-green-800">{item.net_salary} {"টাকা"}</td>
+                  <td className="p-4"><span className="font-body">{item.monthly_salary}</span> {"টাকা"}</td>
+                  <td className="p-4"><span className="font-body">{Math.round(item.daily_salary)}</span> {"টাকা"}</td>
+                  <td className="p-4 text-[--color-success] font-black"><span className="font-body">{item.duty_days}</span> {"দিন"}</td>
+                  <td className="p-4 text-[--color-danger]"><span className="font-body">{item.absent_days}</span> {"দিন"}</td>
+                  <td className="p-4 text-[--color-foreground] font-black">+<span className="font-body">{item.bonus_days}</span> {"দিন"}</td>
+                  <td className="p-4 font-black"><span className="font-body">{item.gross_salary}</span> {"টাকা"}</td>
+                  <td className="p-4 text-[--color-accent-dark]">-<span className="font-body">{item.advance_deducted}</span> {"টাকা"}</td>
+                  <td className="p-4 font-black text-lg text-[--color-success]"><span className="font-body">{item.net_salary}</span> {"টাকা"}</td>
                   {/* পেমেন্ট স্ট্যাটাস কলাম */}
                   <td className="p-4 text-center">
                     {item.is_paid ? (
                       <div className="space-y-1">
-                        <span className="inline-flex items-center rounded-full bg-green-100 text-green-700 px-3 py-1 text-xs font-black">
+                        <span className="inline-flex items-center rounded-full bg-[--color-success]/[0.12] text-[--color-success] px-3 py-1 text-xs font-black">
                           <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
                           {"পরিশোধিত"}
                         </span>
-                        <p className="text-[11px] font-bold text-gray-500 flex items-center justify-center gap-1">
+                        <p className="text-[11px] font-bold text-[--color-foreground-muted] flex items-center justify-center gap-1">
                           <Calendar className="h-3 w-3" />
-                          {formatPaymentDate(item.paid_at)}
+                          <span className="font-body">{formatPaymentDate(item.paid_at)}</span>
                         </p>
                         <button
                           onClick={() => handleTogglePayment(item.id, true)}
                           disabled={updatingPaymentId === item.id}
-                          className="text-[11px] font-black text-red-500 hover:text-red-700 underline cursor-pointer disabled:opacity-50"
+                          className="text-[11px] font-black text-[--color-danger] hover:text-[--color-danger] underline cursor-pointer disabled:opacity-50"
                         >
                           {updatingPaymentId === item.id ? 'বদলানো হচ্ছে...' : 'বাতিল'}
                         </button>
@@ -585,7 +587,7 @@ export default function PayrollPage() {
                       <button
                         onClick={() => handleTogglePayment(item.id, false)}
                         disabled={updatingPaymentId === item.id}
-                        className="inline-flex items-center gap-1.5 rounded-lg bg-green-50 border border-green-200 hover:bg-green-100 text-green-700 px-3 py-1.5 text-xs font-black transition-colors cursor-pointer disabled:opacity-50"
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-[--color-success]/[0.08] border border-[--color-success]/[0.2] hover:bg-[--color-success]/[0.15] text-[--color-success] px-3 py-1.5 text-xs font-black transition-colors cursor-pointer disabled:opacity-50"
                       >
                         <DollarSign className="h-3.5 w-3.5" />
                         <span>{updatingPaymentId === item.id ? 'সংরক্ষণ...' : 'বেতন পরিশোধ'}</span>
@@ -630,26 +632,26 @@ export default function PayrollPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-md rounded-xl bg-[--color-surface] p-6 shadow-xl space-y-4">
             <h2 className="text-xl font-black text-[--color-foreground] border-b pb-2 flex items-center gap-2">
-              <Unlock className="h-5 w-5 text-red-600" />
+              <Unlock className="h-5 w-5 text-[--color-danger]" />
               <span>{"বেতন হিসাব আনলক করুন"}</span>
             </h2>
-            <form onSubmit={handleUnlockPayroll} className="space-y-4 text-base font-bold text-gray-700">
-              {modalError && <div className="rounded-lg bg-red-50 p-3 text-sm font-black text-red-600">{modalError}</div>}
-              
+            <form onSubmit={handleUnlockPayroll} className="space-y-4 text-base font-bold text-[--color-foreground]">
+              {modalError && <div className="rounded-lg bg-[--color-danger]/[0.08] border border-[--color-danger]/[0.2] p-3 text-sm font-black text-[--color-danger]">{modalError}</div>}
+
               <div className="space-y-1">
-                <label className="block text-red-900 font-black">{"আনলক করার সুনির্দিষ্ট কারণ (বাধ্যতামূলক)"}</label>
+                <label className="block text-[--color-danger] font-black">{"আনলক করার সুনির্দিষ্ট কারণ (বাধ্যতামূলক)"}</label>
                 <textarea
                   required
                   placeholder="যেমন: ম্যানেজারের অনুরোধে অমুকের অগ্রিম কাটতে ভুল সংশোধন করা হবে।"
                   value={unlockReason}
                   onChange={(e) => setUnlockReason(e.target.value)}
-                  className="w-full rounded-lg border bg-[--color-surface] p-2.5 font-bold text-[--color-foreground]"
+                  className="input-field w-full p-2.5 font-bold text-[--color-foreground]"
                 />
               </div>
 
-              <div className="flex gap-4 pt-4 border-t">
-                <button type="button" onClick={() => setIsUnlockModalOpen(false)} className="flex-1 rounded-lg border py-3 font-bold cursor-pointer">{"বাতিল"}</button>
-                <button type="submit" disabled={submitting} className="flex-1 rounded-lg bg-red-600 text-white py-3 font-bold cursor-pointer">
+              <div className="flex gap-4 pt-4 border-t border-[--color-border]">
+                <button type="button" onClick={() => setIsUnlockModalOpen(false)} className="flex-1 rounded-lg border border-[--color-border] bg-[--color-surface] py-3 font-bold cursor-pointer hover:bg-[--color-surface-raised]">{"বাতিল"}</button>
+                <button type="submit" disabled={submitting} className="flex-1 rounded-lg bg-[--color-danger] text-white py-3 font-bold cursor-pointer disabled:opacity-60 hover:bg-[--color-danger]/90">
                   {submitting ? 'আনলক হচ্ছে...' : 'হিসাব আনলক করুন'}
                 </button>
               </div>

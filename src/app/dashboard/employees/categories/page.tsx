@@ -13,7 +13,7 @@ export default function CategoriesPage() {
 
   // মেমোইজড ডাটা লোড (সিনক্রোনাস রেন্ডার এরর মুক্ত)
   const loadCategories = useCallback(async () => {
-    await Promise.resolve(); // ডিফারেল
+    await Promise.resolve();
     try {
       setLoading(true);
       const { data, error } = await db.categories()
@@ -69,35 +69,35 @@ export default function CategoriesPage() {
     <div className="space-y-6">
       {/* হেডার */}
       <div className="border-b pb-4">
-        <h1 className="text-2xl md:text-3xl font-black text-gray-900">কর্মচারী ক্যাটাগরি সমূহ</h1>
-        <p className="text-sm font-bold text-gray-500 mt-1">কর্মচারীদের পদবী বা বিভাগ পরিবর্তন ও নতুন ক্যাটাগরি তৈরি</p>
+        <h1 className="text-2xl md:text-3xl font-black text-[--color-foreground] font-bengali">{"কর্মচারী ক্যাটাগরি সমূহ"}</h1>
+        <p className="text-sm font-bold text-[--color-foreground-muted] mt-1 font-bengali">{"কর্মচারীদের পদবী বা বিভাগ পরিবর্তন ও নতুন ক্যাটাগরি তৈরি"}</p>
       </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {/* বাম কলাম: নতুন ক্যাটাগরি ফর্ম */}
-        <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm h-fit space-y-4">
-          <h2 className="text-lg font-black text-gray-900 flex items-center gap-2 border-b pb-2">
-            <Plus className="h-5 w-5 text-[#8B0000]" />
-            <span>নতুন ক্যাটাগরি যোগ করুন</span>
+        <div className="card h-fit space-y-4">
+          <h2 className="text-lg font-black text-[--color-foreground] font-bengali flex items-center gap-2 border-b border-[--color-border]">
+            <Plus className="h-5 w-5 text-[--color-primary]" />
+            <span>{"নতুন ক্যাটাগরি যোগ করুন"}</span>
           </h2>
 
-          <form onSubmit={handleSubmit} className="space-y-4 text-base font-bold text-gray-700">
+          <form onSubmit={handleSubmit} className="space-y-4 text-base font-bold">
             <div className="space-y-1">
-              <label className="block">ক্যাটাগরির নাম (বাংলায়)</label>
+              <label className="block font-bengali">{"ক্যাটাগরির নাম (বাংলায়)"}</label>
               <input
                 type="text"
                 required
                 placeholder="যেমন: ড্রাইভার, সিকিউরিটি"
                 value={categoryName}
                 onChange={(e) => setCategoryName(e.target.value)}
-                className="w-full rounded-lg border border-gray-200 p-2.5 focus:border-[#8B0000] focus:outline-none font-bold"
+                className="input-field w-full font-bold text-[--color-foreground] placeholder:text-[--color-foreground-muted] focus:outline-none"
               />
             </div>
 
             <button
               type="submit"
               disabled={submitting}
-              className="w-full rounded-lg bg-[#8B0000] hover:bg-[#8B0000]/90 py-3 text-center font-bold text-white shadow focus:outline-none cursor-pointer"
+              className="btn-primary w-full disabled:opacity-60 cursor-pointer"
             >
               {submitting ? 'সংরক্ষণ হচ্ছে...' : 'সংরক্ষণ করুন'}
             </button>
@@ -105,28 +105,28 @@ export default function CategoriesPage() {
         </div>
 
         {/* ডান কলাম: ক্যাটাগরি তালিকা */}
-        <div className="md:col-span-2 rounded-xl border border-gray-100 bg-white p-6 shadow-sm space-y-4">
-          <h2 className="text-lg font-black text-gray-900 flex items-center gap-2 border-b pb-2">
-            <Layers className="h-5 w-5 text-[#8B0000]" />
-            <span>বর্তমান ক্যাটাগরি তালিকা</span>
+        <div className="card md:col-span-2 space-y-4">
+          <h2 className="text-lg font-black text-[--color-foreground] font-bengali flex items-center gap-2 border-b border-[--color-border]">
+            <Layers className="h-5 w-5 text-[--color-primary]" />
+            <span>{"বর্তমান ক্যাটাগরি তালিকা"}</span>
           </h2>
 
           {loading ? (
             <div className="text-center py-8">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#8B0000] border-t-transparent mx-auto"></div>
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-[--color-primary] border-t-transparent mx-auto"></div>
             </div>
           ) : categories.length === 0 ? (
-            <p className="text-center font-bold text-gray-400 py-8">কোনো ক্যাটাগরি পাওয়া যায়নি।</p>
+            <p className="text-center font-bold text-[--color-foreground-muted] py-8">{"কোনো ক্যাটাগরি পাওয়া যায়নি।"}</p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {categories.map((cat) => (
-                <div key={cat.id} className="flex items-center gap-3 rounded-lg border border-gray-100 p-4 bg-gray-50 hover:bg-gray-100/50 transition-colors">
-                  <div className="rounded-full bg-[#8B0000]/10 p-2.5 text-[#8B0000]">
+                <div key={cat.id} className="card flex items-center gap-3">
+                  <div className="rounded-full bg-[--color-primary]/[0.08] p-2.5 text-[--color-primary]">
                     <Tag className="h-5 w-5" />
                   </div>
                   <div>
-                    <p className="font-black text-gray-900">{cat.category_name}</p>
-                    <span className="text-[10px] text-gray-400 font-bold">আইডি: {cat.id.slice(0, 8)}...</span>
+                    <p className="font-black text-[--color-foreground]">{cat.category_name}</p>
+                    <span className="text-[10px] text-[--color-foreground-muted] font-bold">{"আইডি: "}<span className="font-body">{cat.id.slice(0, 8)}...</span></span>
                   </div>
                 </div>
               ))}

@@ -196,11 +196,11 @@ export default function DashboardPage() {
 
   const metrics = [
     { label: 'মোট কর্মচারী', labelEn: 'Total Employees', value: stats.totalEmployees, suffix: 'জন', icon: Users, color: 'text-[--color-primary]', bg: 'bg-[--color-primary]/[0.08]' },
-    { label: 'সক্রিয় কর্মচারী', labelEn: 'Active Staff', value: stats.activeEmployees, suffix: 'জন', icon: UserCheck, color: 'text-[--color-success]', bg: 'bg-green-50' },
-    { label: 'ছুটিতে', labelEn: 'On Leave', value: stats.leaveEmployees, suffix: 'জন', icon: CalendarX, color: 'text--color-warning', bg: 'bg-amber-50' },
-    { label: `চলতি মাসের অগ্রিম`, labelEn: 'This Month Advances', value: formatCurrency(stats.totalAdvancesThisMonth), suffix: 'টাকা', icon: Banknote, color: 'text-amber-700', bg: 'bg-amber-50', isCurrency: true },
+    { label: 'সক্রিয় কর্মচারী', labelEn: 'Active Staff', value: stats.activeEmployees, suffix: 'জন', icon: UserCheck, color: 'text-[--color-success]', bg: 'bg-[--color-success]/[0.08]' },
+    { label: 'ছুটিতে', labelEn: 'On Leave', value: stats.leaveEmployees, suffix: 'জন', icon: CalendarX, color: 'text-[--color-warning]', bg: 'bg-[--color-warning]/[0.08]' },
+    { label: `চলতি মাসের অগ্রিম`, labelEn: 'This Month Advances', value: formatCurrency(stats.totalAdvancesThisMonth), suffix: 'টাকা', icon: Banknote, color: 'text-[--color-warning]', bg: 'bg-[--color-warning]/[0.08]', isCurrency: true },
     { label: 'আনুমানিক বেতন বাজেট', labelEn: 'Est. Payroll Budget', value: formatCurrency(stats.estimatedSalaryThisMonth), suffix: 'টাকা', icon: Banknote, color: 'text-[--color-primary]', bg: 'bg-[--color-primary]/[0.06]', isCurrency: true },
-    { label: 'AI পরামর্শ', labelEn: 'AI Insights', value: '৩', suffix: '', icon: Sparkles, color: 'text-purple-600', bg: 'bg-purple-50' },
+    { label: 'AI পরামর্শ', labelEn: 'AI Insights', value: '৩', suffix: '', icon: Sparkles, color: 'text-[--color-accent]', bg: 'bg-[--color-accent]/[0.08]' },
   ];
 
   return (
@@ -211,7 +211,7 @@ export default function DashboardPage() {
           <p className="text-xs font-semibold uppercase tracking-wider text-[--color-foreground-muted] font-body mb-1">{"আজকের সারাংশ"}</p>
           <h1 className="text-2xl md:text-3xl font-bold text-[--color-foreground] font-bengali">{"ড্যাশবোর্ড"}</h1>
           <p className="text-sm text-[--color-foreground-muted] mt-1">
-            {"আজ: "}{formattedToday}{" | "}{monthName}{" "}{currentYear}
+            {"আজ: "}<span className="font-body">{formattedToday}</span>{" | "}{monthName}{" "}{currentYear}
           </p>
         </div>
         <button
@@ -274,12 +274,12 @@ export default function DashboardPage() {
                     <tr key={emp.id} className="transition-colors hover:bg-[--color-primary]/[0.02]">
                       <td className="p-3 px-5 font-semibold text-[--color-foreground] font-bengali">{emp.fullName}</td>
                       <td className="p-3 px-5">
-                        <span className="inline-block rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-800 border border-amber-200 font-bengali">
+                        <span className="inline-block rounded-full bg-[--color-accent]/[0.08] px-2.5 py-0.5 text-xs font-semibold text-[--color-accent-dark] border border-[--color-accent]/30 font-bengali">
                           {emp.categoryName}
                         </span>
                       </td>
                       <td className="p-3 px-5 text-[--color-foreground-muted] font-body">{formatDate(emp.startDate)}</td>
-                      <td className="p-3 px-5 font-bold text-red-600 font-bengali">{`${emp.daysOnLeave} দিন যাবত`}</td>
+                      <td className="p-3 px-5 font-bold text-[--color-danger] font-bengali">{`${emp.daysOnLeave} দিন যাবত`}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -294,9 +294,9 @@ export default function DashboardPage() {
           <h2 className="text-lg font-semibold text-[--color-foreground] font-bengali mb-4">{"পাঠকালীন সূচনা"}</h2>
           <div className="space-y-3">
             {[
-              { icon: Sparkles, text: 'এই মাসে মোট অগ্রিমের পরিমাণ গত মাসের তুলনায় ১৫% বেশি হয়েছে, মনোযোগ দিন।', color: 'text-amber-700', bg: 'bg-amber-50' },
-              { icon: Sparkles, text: '২ জন কর্মচারী presently on unpaid leave — check their return schedule.', color: 'text-purple-600', bg: 'bg-purple-50' },
-              { icon: Sparkles, text: 'বেতন স্লিপ ডাউনলোডে নতুন পেমেন্ট ট্র্যাকিং ফিচার চালু হয়েছে।', color: 'text-[--color-success]', bg: 'bg-green-50' },
+              { icon: Sparkles, text: 'এই মাসে মোট অগ্রিমের পরিমাণ গত মাসের তুলনায় ১৫% বেশি হয়েছে, মনোযোগ দিন।', color: 'text-[--color-warning]', bg: 'bg-[--color-warning]/[0.08]' },
+              { icon: Sparkles, text: '২ জন কর্মচারী presently on unpaid leave — check their return schedule.', color: 'text-[--color-accent]', bg: 'bg-[--color-accent]/[0.08]' },
+              { icon: Sparkles, text: 'বেতন স্লিপ ডাউনলোডে নতুন পেমেন্ট ট্র্যাকিং ফিচার চালু হয়েছে।', color: 'text-[--color-success]', bg: 'bg-[--color-success]/[0.08]' },
             ].map((insight, i) => (
               <div key={i} className={`rounded-[--radius-sm] ${insight.bg} p-3 flex gap-2.5`}>
                 <insight.icon className={`h-4 w-4 ${insight.color} shrink-0 mt-0.5`} />

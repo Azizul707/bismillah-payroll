@@ -330,8 +330,8 @@ export default function EmployeeProfilePage({ params }: PageProps) {
     return (
       <div className="flex h-[60vh] items-center justify-center">
         <div className="text-center">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#8B0000] border-t-transparent mx-auto"></div>
-          <p className="mt-4 text-lg font-bold text-gray-700">{"তথ্য লোড হচ্ছে..."}</p>
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-[--color-primary] border-t-transparent mx-auto"></div>
+          <p className="mt-4 text-lg font-bold text-[--color-foreground] font-bengali">{"তথ্য লোড হচ্ছে..."}</p>
         </div>
       </div>
     );
@@ -340,71 +340,71 @@ export default function EmployeeProfilePage({ params }: PageProps) {
   return (
     <div className="space-y-6">
       {/* ব্যাক বোতাম ও হেডার */}
-      <div className="flex items-center gap-4 border-b pb-4">
-        <Link href="/dashboard/employees" className="rounded-lg border p-2 hover:bg-gray-100 transition-colors">
-          <ArrowLeft className="h-5 w-5 text-[#8B0000]" />
+      <div className="flex items-center gap-4 border-b border-[--color-border] pb-4">
+        <Link href="/dashboard/employees" className="rounded-lg border border-[--color-border] p-2 hover:bg-[--color-surface-raised] transition-colors">
+          <ArrowLeft className="h-5 w-5 text-[--color-primary]" />
         </Link>
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{employee.full_name}</h1>
-          <p className="text-sm font-semibold text-gray-500 mt-1">{"কোড:"} {employee.employee_code} {"| কাজের তথ্য ও হিস্ট্রি"}</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-[--color-foreground] font-bengali">{employee.full_name}</h1>
+          <p className="text-sm font-semibold text-[--color-foreground-muted] mt-1 font-bengali">{"কোড:"} <span className="font-body">{employee.employee_code}</span> {"| কাজের তথ্য ও হিস্ট্রি"}</p>
         </div>
       </div>
 
       {/* কর্মচারীর মৌলিক তথ্য গ্রিড */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {/*বাম কলাম: ব্যক্তিগত তথ্য */}
-        <div className="md:col-span-2 rounded-xl border border-gray-100 bg-white p-6 shadow-sm space-y-4">
-          <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2 border-b pb-2">
-            <User className="h-5 w-5 text-gray-400" />
+        <div className="card md:col-span-2 space-y-4">
+          <h2 className="text-lg font-bold text-[--color-foreground] flex items-center gap-2 border-b border-[--color-border] pb-2 font-bengali">
+            <User className="h-5 w-5 text-[--color-foreground-muted]" />
             <span>{"ব্যক্তিগত ও পেশাগত তথ্য"}</span>
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-base font-semibold text-gray-700">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-base font-body text-[--color-foreground]">
             <div className="flex items-center gap-2.5">
-              <Phone className="h-5 w-5 text-gray-400" />
+              <Phone className="h-5 w-5 text-[--color-foreground-muted]" />
               <div>
-                <p className="text-xs text-gray-400 font-bold">{"মোবাইল নম্বর"}</p>
-                <span>{employee.mobile_number}</span>
+                <p className="text-xs font-bold text-[--color-foreground-muted] font-bengali">{"মোবাইল নম্বর"}</p>
+                <span className="font-body">{employee.mobile_number}</span>
               </div>
             </div>
             <div className="flex items-center gap-2.5">
-              <Briefcase className="h-5 w-5 text-gray-400" />
+              <Briefcase className="h-5 w-5 text-[--color-foreground-muted]" />
               <div>
-                <p className="text-xs text-gray-400 font-bold">{"স্টাফ ক্যাটাগরি"}</p>
-                <span>{categories.find(c => c.id === employee.category_id)?.category_name || 'নাই'}</span>
+                <p className="text-xs font-bold text-[--color-foreground-muted] font-bengali">{"স্টাফ ক্যাটাগরি"}</p>
+                <span className="font-bengali">{categories.find(c => c.id === employee.category_id)?.category_name || 'নাই'}</span>
               </div>
             </div>
             <div className="flex items-center gap-2.5">
-              <Calendar className="h-5 w-5 text-gray-400" />
+              <Calendar className="h-5 w-5 text-[--color-foreground-muted]" />
               <div>
-                <p className="text-xs text-gray-400 font-bold">{"যোগদানের তারিখ"}</p>
-                <span>{formatDate(employee.joining_date)}</span> {/* যোগদানের তারিখ ডাইনামিক ফরম্যাট */}
+                <p className="text-xs font-bold text-[--color-foreground-muted] font-bengali">{"যোগদানের তারিখ"}</p>
+                <span className="font-body">{formatDate(employee.joining_date)}</span>
               </div>
             </div>
           </div>
 
-          <div className="border-t pt-4">
-            <h3 className="text-xs text-gray-400 font-bold">{"অন্যান্য মন্তব্য"}</h3>
-            <p className="text-base font-semibold text-gray-800 mt-1">{employee.remarks || 'কোনো মন্তব্য নেই।'}</p>
+          <div className="border-t border-[--color-border] pt-4">
+            <h3 className="text-xs font-bold text-[--color-foreground-muted] font-bengali">{"অন্যান্য মন্তব্য"}</h3>
+            <p className="text-base font-semibold text-[--color-foreground] mt-1 font-bengali">{employee.remarks || 'কোনো মন্তব্য নেই।'}</p>
           </div>
         </div>
 
         {/* ডান কলাম: বেতন স্ট্যাটাস ও ওয়ান-ক্লিক অ্যাকশন */}
-        <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm space-y-4 flex flex-col justify-between">
+        <div className="card flex flex-col justify-between space-y-4">
           <div className="space-y-4">
-            <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2 border-b pb-2">
-              <DollarSign className="h-5 w-5 text-gray-400" />
+            <h2 className="text-lg font-bold text-[--color-foreground] flex items-center gap-2 border-b border-[--color-border] pb-2 font-bengali">
+              <DollarSign className="h-5 w-5 text-[--color-foreground-muted]" />
               <span>{"বেতন ও কাজের স্ট্যাটাস"}</span>
             </h2>
             <div className="flex items-center justify-between">
-              <span className="font-semibold text-gray-500">{"মাসিক বেতন:"}</span>
-              <span className="text-xl font-bold text-gray-800">{employee.monthly_salary} {"টাকা"}</span>
+              <span className="font-semibold text-[--color-foreground-muted] font-bengali">{"মাসিক বেতন:"}</span>
+              <span className="text-xl font-bold text-[--color-foreground] font-body">{employee.monthly_salary} {"টাকা"}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="font-semibold text-gray-500">{"বর্তমান স্ট্যাটাস:"}</span>
+              <span className="font-semibold text-[--color-foreground-muted] font-bengali">{"বর্তমান স্ট্যাটাস:"}</span>
               <span className={`rounded-full px-3 py-1 text-sm font-bold ${
-                employee.status === 'active' 
-                  ? 'bg-green-100 text-green-700' 
-                  : 'bg-amber-100 text-amber-700'
+                employee.status === 'active'
+                  ? 'bg-[--color-success]/[0.08] text-[--color-success]'
+                  : 'bg-[--color-warning]/[0.08] text-[--color-warning]'
               }`}>
                 {employee.status === 'active' ? 'বর্তমানে কর্মরত' : 'ছুটিতে আছেন'}
               </span>
@@ -412,36 +412,36 @@ export default function EmployeeProfilePage({ params }: PageProps) {
           </div>
 
           {/* ওয়ান-ক্লিক কুইক অ্যাকশন বাটনসমূহ */}
-          <div className="grid grid-cols-2 gap-2 pt-4 border-t">
+          <div className="grid grid-cols-2 gap-2 pt-4 border-t border-[--color-border]">
             {employee.status === 'active' ? (
               <button
                 onClick={() => { setIsLeaveModalOpen(true); setErrorMsg(''); }}
-                className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 hover:bg-amber-100/50 p-3 text-center transition-colors cursor-pointer"
+                className="btn-accent btn flex flex-col items-center justify-center gap-1.5 p-3 text-center cursor-pointer"
               >
-                <CalendarX className="h-6 w-6 text-amber-700" />
-                <span className="text-sm font-semibold text-amber-900">{"ছুটি শুরু করুন"}</span>
+                <CalendarX className="h-6 w-6" />
+                <span className="text-sm font-semibold font-bengali">{"ছুটি শুরু করুন"}</span>
               </button>
             ) : (
               <button
                 onClick={() => { setIsResumeModalOpen(true); setErrorMsg(''); }}
-                className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-green-200 bg-green-50 hover:bg-green-100/50 p-3 text-center transition-colors cursor-pointer"
+                className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-[--color-success] bg-[--color-success]/[0.08] hover:bg-[--color-success]/[0.15] p-3 text-center transition-colors cursor-pointer"
               >
-                <CalendarCheck className="h-6 w-6 text-green-700" />
-                <span className="text-sm font-semibold text-green-900">{"কাজে যোগদান"}</span>
+                <CalendarCheck className="h-6 w-6 text-[--color-success]" />
+                <span className="text-sm font-semibold text-[--color-success] font-bengali">{"কাজে যোগদান"}</span>
               </button>
             )}
 
             <button
               onClick={() => { setIsAdvanceModalOpen(true); setErrorMsg(''); }}
-              className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-red-100 bg-red-50 hover:bg-red-100/50 p-3 text-center transition-colors cursor-pointer"
+              className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-[--color-danger]/0 bg-[--color-danger]/[0.08] hover:bg-[--color-danger]/[0.15] p-3 text-center transition-colors cursor-pointer"
             >
-              <Coins className="h-6 w-6 text-[#8B0000]" />
-              <span className="text-sm font-black text-red-900">{"অগ্রিম প্রদান"}</span>
+              <Coins className="h-6 w-6 text-[--color-primary]" />
+              <span className="text-sm font-black text-[--color-danger] font-bengali">{"অগ্রিম প্রদান"}</span>
             </button>
 
             <button
               onClick={() => { setIsEditModalOpen(true); setErrorMsg(''); }}
-              className="col-span-2 flex items-center justify-center gap-2 rounded-xl border border-gray-200 py-3 text-center hover:bg-gray-50 text-sm font-semibold text-gray-700 transition-colors cursor-pointer"
+              className="col-span-2 flex items-center justify-center gap-2 rounded-lg border border-[--color-border] bg-[--color-surface] hover:bg-[--color-surface-raised] py-3 text-center text-sm font-semibold text-[--color-foreground] transition-colors cursor-pointer font-bengali"
             >
               <Pencil className="h-4 w-4" />
               <span>{"তথ্য পরিবর্তন করুন"}</span>
@@ -450,7 +450,7 @@ export default function EmployeeProfilePage({ params }: PageProps) {
             {/* প্রোফাইল ডিলিট করার বাটন */}
             <button
               onClick={() => { setIsDeleteModalOpen(true); setDeleteReason(''); setErrorMsg(''); }}
-              className="col-span-2 flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 py-3 text-center text-sm font-semibold text-red-700 transition-colors cursor-pointer"
+              className="col-span-2 flex items-center justify-center gap-2 rounded-lg border border-[--color-danger] bg-[--color-danger]/[0.08] hover:bg-[--color-danger]/[0.15] py-3 text-center text-sm font-semibold text-[--color-danger] transition-colors cursor-pointer font-bengali"
             >
               <Trash2 className="h-4 w-4" />
               <span>{"প্রোফাইল ডিলিট করুন"}</span>
@@ -462,29 +462,29 @@ export default function EmployeeProfilePage({ params }: PageProps) {
       {/* ছুটি ও অগ্রিম হিস্ট্রি ট্যাব বা গ্রিড */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* ১. কাজের টাইমলাইন / ছুটির ইতিহাস */}
-        <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm space-y-4">
-          <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2 border-b pb-2">
-            <History className="h-5 w-5 text-gray-400" />
+        <div className="glass p-6 space-y-4">
+          <h2 className="text-lg font-bold text-[--color-foreground] flex items-center gap-2 border-b border-[--color-border] pb-2 font-bengali">
+            <History className="h-5 w-5 text-[--color-foreground-muted]" />
             <span>{"হাজিরা ও কাজের টাইমলাইন"}</span>
           </h2>
           <div className="space-y-4 max-h-64 overflow-y-auto pr-2">
             {timeline.length === 0 ? (
-              <p className="text-center font-bold text-gray-400 py-8">{"কোনো টাইমলাইন রেকর্ড পাওয়া যায়নি।"}</p>
+              <p className="text-center font-bold text-[--color-foreground-muted] py-8 font-bengali">{"কোনো টাইমলাইন রেকর্ড পাওয়া যায়নি।"}</p>
             ) : (
               timeline.map((item) => (
-                <div key={item.id} className="flex gap-4 border-l-2 border-gray-100 pl-4 pb-2 relative">
+                <div key={item.id} className="flex gap-4 border-l-2 border-[--color-border] pl-4 pb-2 relative">
                   <div className={`absolute -left-[7px] top-1.5 h-3 w-3 rounded-full ${
-                    item.status === 'active' ? 'bg-green-500' : 'bg-amber-500'
+                    item.status === 'active' ? 'bg-[--color-success]' : 'bg-[--color-warning]'
                   }`} />
-                  <div className="text-base font-semibold text-gray-700">
-                    <p className="font-bold text-gray-950">
-                      {item.status === 'active' ? 'ডিউটিতে সক্রিয়' : 'ছুটি শুরু'} 
+                  <div className="text-base font-semibold text-[--color-foreground]">
+                    <p className="font-bold text-[--color-foreground] font-bengali">
+                      {item.status === 'active' ? 'ডিউটিতে সক্রিয়' : 'ছুটি শুরু'}
                       {item.leave_type && ` (ছুটি: ${item.leave_type === 'unpaid' ? 'অবৈতনিক' : 'অন্যান্য'})`}
                     </p>
-                    <p className="text-xs text-gray-400 mt-0.5">
+                    <p className="text-xs text-[--color-foreground-muted] mt-0.5 font-body">
                       {"শুরু: "} {formatDate(item.start_date)} {item.end_date ? `| শেষ: ${formatDate(item.end_date)}` : ' | চলমান'}
                     </p>
-                    {item.reason && <p className="text-sm text-gray-500 mt-1">{"কারণ:"} {item.reason}</p>}
+                    {item.reason && <p className="text-sm text-[--color-foreground-muted] mt-1 font-bengali">{"কারণ:"} {item.reason}</p>}
                   </div>
                 </div>
               ))
@@ -493,21 +493,21 @@ export default function EmployeeProfilePage({ params }: PageProps) {
         </div>
 
         {/* ২. অগ্রিম বেতন হিস্ট্রি */}
-        <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm space-y-4">
-          <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2 border-b pb-2">
-            <Coins className="h-5 w-5 text-gray-400" />
+        <div className="glass p-6 space-y-4">
+          <h2 className="text-lg font-bold text-[--color-foreground] flex items-center gap-2 border-b border-[--color-border] pb-2 font-bengali">
+            <Coins className="h-5 w-5 text-[--color-foreground-muted]" />
             <span>{"অগ্রিম বেতন ইতিহাস"}</span>
           </h2>
           <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
             {advances.length === 0 ? (
-              <p className="text-center font-bold text-gray-400 py-8">{"কোনো অগ্রিম বেতন রেকর্ড পাওয়া যায়নি।"}</p>
+              <p className="text-center font-bold text-[--color-foreground-muted] py-8 font-bengali">{"কোনো অগ্রিম বেতন রেকর্ড পাওয়া যায়নি।"}</p>
             ) : (
               advances.map((item) => (
-                <div key={item.id} className="flex items-center justify-between rounded-lg bg-gray-50 p-4 border border-gray-100">
-                  <div className="text-base font-semibold text-gray-700">
-                    <p className="font-bold text-gray-950">{item.amount} {"টাকা"}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">{"মাস:"} {item.advance_month}-{item.advance_year}</p>
-                    {item.reason && <p className="text-sm text-gray-500 mt-1">{"কারণ:"} {item.reason}</p>}
+                <div key={item.id} className="flex items-center justify-between rounded-lg bg-[--color-surface-raised] p-4 border border-[--color-border]">
+                  <div className="text-base font-semibold text-[--color-foreground]">
+                    <p className="font-bold text-[--color-foreground] font-body">{item.amount} {"টাকা"}</p>
+                    <p className="text-xs text-[--color-foreground-muted] mt-0.5 font-bengali">{"মাস:"} <span className="font-body">{item.advance_month}-{item.advance_year}</span></p>
+                    {item.reason && <p className="text-sm text-[--color-foreground-muted] mt-1 font-bengali">{"কারণ:"} {item.reason}</p>}
                   </div>
                   <button
                     onClick={async () => {
@@ -521,7 +521,7 @@ export default function EmployeeProfilePage({ params }: PageProps) {
                         alert(err instanceof Error ? err.message : 'ডিলিট করতে ত্রুটি হয়েছে।');
                       }
                     }}
-                    className="text-red-600 hover:text-red-700 text-sm font-semibold cursor-pointer"
+                    className="text-[--color-danger] hover:text-[--color-danger] text-sm font-semibold cursor-pointer font-bengali"
                   >
                     {"মুছে ফেলুন"}
                   </button>
@@ -536,32 +536,32 @@ export default function EmployeeProfilePage({ params }: PageProps) {
       {/* ১. ছুটি শুরু করার মডাল (Leave Modal) */}
       {/* ========================================== */}
       {isLeaveModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl space-y-4">
-            <h2 className="text-xl font-bold text-gray-900 border-b pb-2 flex items-center gap-2">
-              <CalendarX className="h-5 w-5 text-amber-600" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="glass w-full max-w-md space-y-4">
+            <h2 className="text-xl font-bold text-[--color-foreground] border-b border-[--color-border] pb-2 flex items-center gap-2 font-bengali">
+              <CalendarX className="h-5 w-5 text-[--color-warning]" />
               <span>{"ছুটি শুরু করুন"}</span>
             </h2>
-            <form onSubmit={handleLeaveSubmit} className="space-y-4 text-base font-semibold text-gray-700">
-              {errorMsg && <div className="rounded-lg bg-red-50 p-3 text-sm font-semibold text-red-600">{errorMsg}</div>}
+            <form onSubmit={handleLeaveSubmit} className="space-y-4 text-base font-body text-[--color-foreground]">
+              {errorMsg && <div className="rounded-lg bg-[--color-danger]/[0.08] p-3 text-sm font-bold text-[--color-danger]">{errorMsg}</div>}
               
               <div className="space-y-1">
-                <label className="block">{"ছুটি শুরু হওয়ার তারিখ"}</label>
+                <label className="block text-sm font-medium text-[--color-foreground] font-bengali">{"ছুটি শুরু হওয়ার তারিখ"}</label>
                 <input
                   type="date"
                   required
                   value={leaveStartDate}
                   onChange={(e) => setLeaveStartDate(e.target.value)}
-                  className="w-full rounded-lg border p-2.5 font-bold"
+                  className="input-field"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="block">{"ছুটির ধরণ"}</label>
+                <label className="block text-sm font-medium text-[--color-foreground] font-bengali">{"ছুটির ধরণ"}</label>
                 <select
                   value={leaveType}
                   onChange={(e) => setLeaveType(e.target.value as 'unpaid')}
-                  className="w-full rounded-lg border p-2.5 font-bold"
+                  className="input-field"
                 >
                   <option value="unpaid">{"অবৈতনিক ছুটি (Unpaid) - বেতন থেকে কাটা যাবে"}</option>
                   <option value="paid">{"বৈতনিক ছুটি (Paid) - পূর্ণ বেতন পাবেন"}</option>
@@ -572,19 +572,19 @@ export default function EmployeeProfilePage({ params }: PageProps) {
               </div>
 
               <div className="space-y-1">
-                <label className="block">{"ছুটি মঞ্জুরের কারণ (বাধ্যতামূলক)"}</label>
+                <label className="block text-sm font-medium text-[--color-foreground] font-bengali">{"ছুটি মঞ্জুরের কারণ (বাধ্যতামূলক)"}</label>
                 <textarea
                   required
                   placeholder="যেমন: গ্রামে যাবে জরুরি কাজে"
                   value={leaveReason}
                   onChange={(e) => setLeaveReason(e.target.value)}
-                  className="w-full rounded-lg border p-2.5 font-bold"
+                  className="input-field"
                 />
               </div>
 
-              <div className="flex gap-4 pt-4 border-t">
-                <button type="button" onClick={() => setIsLeaveModalOpen(false)} className="flex-1 rounded-lg border py-3 font-bold cursor-pointer">{"বাতিল"}</button>
-                <button type="submit" disabled={submitting} className="flex-1 rounded-lg bg-[#8B0000] text-white py-3 font-bold cursor-pointer">
+              <div className="flex gap-4 pt-4 border-t border-[--color-border]">
+                <button type="button" onClick={() => setIsLeaveModalOpen(false)} className="flex-1 rounded-lg border border-[--color-border] py-3 font-body font-bold text-[--color-foreground-muted] hover:bg-[--color-surface-raised] cursor-pointer">{"বাতিল"}</button>
+                <button type="submit" disabled={submitting} className="btn-primary flex-1">
                   {submitting ? 'সংরক্ষণ হচ্ছে...' : 'ছুটি শুরু করুন'}
                 </button>
               </div>
@@ -597,29 +597,29 @@ export default function EmployeeProfilePage({ params }: PageProps) {
       {/* ২. কাজে যোগদানের মডাল (Resume Duty Modal) */}
       {/* ========================================== */}
       {isResumeModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl space-y-4">
-            <h2 className="text-xl font-bold text-gray-900 border-b pb-2 flex items-center gap-2">
-              <CalendarCheck className="h-5 w-5 text-green-600" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="glass w-full max-w-md space-y-4">
+            <h2 className="text-xl font-bold text-[--color-foreground] border-b border-[--color-border] pb-2 flex items-center gap-2 font-bengali">
+              <CalendarCheck className="h-5 w-5 text-[--color-success]" />
               <span>{"কাজে যোগদান"}</span>
             </h2>
-            <form onSubmit={handleResumeSubmit} className="space-y-4 text-base font-semibold text-gray-700">
-              {errorMsg && <div className="rounded-lg bg-red-50 p-3 text-sm font-bold text-red-600">{errorMsg}</div>}
-              
+            <form onSubmit={handleResumeSubmit} className="space-y-4 text-base font-body text-[--color-foreground]">
+              {errorMsg && <div className="rounded-lg bg-[--color-danger]/[0.08] p-3 text-sm font-bold text-[--color-danger]">{errorMsg}</div>}
+
               <div className="space-y-1">
-                <label className="block">{"যোগদানের তারিখ"}</label>
+                <label className="block text-sm font-medium text-[--color-foreground] font-bengali">{"যোগদানের তারিখ"}</label>
                 <input
                   type="date"
                   required
                   value={resumeDate}
                   onChange={(e) => setResumeDate(e.target.value)}
-                  className="w-full rounded-lg border p-2.5 font-bold"
+                  className="input-field"
                 />
               </div>
 
-              <div className="flex gap-4 pt-4 border-t">
-                <button type="button" onClick={() => setIsResumeModalOpen(false)} className="flex-1 rounded-lg border py-3 font-bold cursor-pointer">{"বাতিল"}</button>
-                <button type="submit" disabled={submitting} className="flex-1 rounded-lg bg-green-700 text-white py-3 font-bold cursor-pointer">
+              <div className="flex gap-4 pt-4 border-t border-[--color-border]">
+                <button type="button" onClick={() => setIsResumeModalOpen(false)} className="flex-1 rounded-lg border border-[--color-border] py-3 font-body font-bold text-[--color-foreground-muted] hover:bg-[--color-surface-raised] cursor-pointer">{"বাতিল"}</button>
+                <button type="submit" disabled={submitting} className="btn-primary flex-1">
                   {submitting ? 'যোগদান হচ্ছে...' : 'যোগদান করান'}
                 </button>
               </div>
@@ -632,40 +632,40 @@ export default function EmployeeProfilePage({ params }: PageProps) {
       {/* ৩. অগ্রিম প্রদানের মডাল (Advance Modal) */}
       {/* ========================================== */}
       {isAdvanceModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl space-y-4">
-            <h2 className="text-xl font-bold text-gray-900 border-b pb-2 flex items-center gap-2">
-              <Coins className="h-5 w-5 text-[#8B0000]" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="glass w-full max-w-md space-y-4">
+            <h2 className="text-xl font-bold text-[--color-foreground] border-b border-[--color-border] pb-2 flex items-center gap-2 font-bengali">
+              <Coins className="h-5 w-5 text-[--color-primary]" />
               <span>{"অগ্রিম বেতন প্রদান"}</span>
             </h2>
-            <form onSubmit={handleAdvanceSubmit} className="space-y-4 text-base font-semibold text-gray-700">
-              {errorMsg && <div className="rounded-lg bg-red-50 p-3 text-sm font-bold text-red-600">{errorMsg}</div>}
-              
+            <form onSubmit={handleAdvanceSubmit} className="space-y-4 text-base font-body text-[--color-foreground]">
+              {errorMsg && <div className="rounded-lg bg-[--color-danger]/[0.08] p-3 text-sm font-bold text-[--color-danger]">{errorMsg}</div>}
+
               <div className="space-y-1">
-                <label className="block">{"টাকার পরিমাণ (ইংলিশ সংখ্যায়)"}</label>
+                <label className="block text-sm font-medium text-[--color-foreground] font-bengali">{"টাকার পরিমাণ (ইংলিশ সংখ্যায়)"}</label>
                 <input
                   type="number"
                   required
                   placeholder="যেমন: 5000"
                   value={advanceAmount}
                   onChange={(e) => setAdvanceAmount(e.target.value)}
-                  className="w-full rounded-lg border p-2.5 font-bold"
+                  className="input-field font-body"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="block">{"অগ্রিমের কারণ (ঐচ্ছিক)"}</label>
+                <label className="block text-sm font-medium text-[--color-foreground] font-bengali">{"অগ্রিমের কারণ (ঐচ্ছিক)"}</label>
                 <textarea
                   placeholder="যেমন: পারিবারিক জরুরি অবস্থা"
                   value={advanceReason}
                   onChange={(e) => setAdvanceReason(e.target.value)}
-                  className="w-full rounded-lg border p-2.5 font-bold"
+                  className="input-field"
                 />
               </div>
 
-              <div className="flex gap-4 pt-4 border-t">
-                <button type="button" onClick={() => setIsAdvanceModalOpen(false)} className="flex-1 rounded-lg border py-3 font-bold cursor-pointer">{"বাতিল"}</button>
-                <button type="submit" disabled={submitting} className="flex-1 rounded-lg bg-[#8B0000] text-white py-3 font-bold cursor-pointer">
+              <div className="flex gap-4 pt-4 border-t border-[--color-border]">
+                <button type="button" onClick={() => setIsAdvanceModalOpen(false)} className="flex-1 rounded-lg border border-[--color-border] py-3 font-body font-bold text-[--color-foreground-muted] hover:bg-[--color-surface-raised] cursor-pointer">{"বাতিল"}</button>
+                <button type="submit" disabled={submitting} className="btn-primary flex-1">
                   {submitting ? 'যোগ হচ্ছে...' : 'অগ্রিম যুক্ত করুন'}
                 </button>
               </div>
@@ -678,44 +678,44 @@ export default function EmployeeProfilePage({ params }: PageProps) {
       {/* ৪. তথ্য পরিবর্তন মডাল (Edit Info Modal) */}
       {/* ========================================== */}
       {isEditModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold text-gray-900 border-b pb-2 flex items-center gap-2">
-              <Pencil className="h-5 w-5 text-gray-500" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="glass w-full max-w-lg space-y-4 max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-bold text-[--color-foreground] border-b border-[--color-border] pb-2 flex items-center gap-2 font-bengali">
+              <Pencil className="h-5 w-5 text-[--color-foreground-muted]" />
               <span>{"তথ্য পরিবর্তন করুন"}</span>
             </h2>
-            <form onSubmit={handleEditSubmit} className="space-y-4 text-base font-semibold text-gray-700">
-              {errorMsg && <div className="rounded-lg bg-red-50 p-3 text-sm font-bold text-red-600">{errorMsg}</div>}
+            <form onSubmit={handleEditSubmit} className="space-y-4 text-base font-body text-[--color-foreground]">
+              {errorMsg && <div className="rounded-lg bg-[--color-danger]/[0.08] p-3 text-sm font-bold text-[--color-danger]">{errorMsg}</div>}
               
               <div className="space-y-1">
-                <label className="block">{"পূর্ণ নাম"}</label>
+                <label className="block text-sm font-medium text-[--color-foreground] font-bengali">{"পূর্ণ নাম"}</label>
                 <input
                   type="text"
                   required
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="w-full rounded-lg border p-2.5 font-bold"
+                  className="input-field"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="block">{"মোবাইল নম্বর"}</label>
+                <label className="block text-sm font-medium text-[--color-foreground] font-bengali">{"মোবাইল নম্বর"}</label>
                 <input
                   type="text"
                   required
                   value={mobileNumber}
                   onChange={(e) => setMobileNumber(e.target.value)}
-                  className="w-full rounded-lg border p-2.5 font-bold"
+                  className="input-field"
                 />
               </div>
 
               {/* ক্যাটাগরি */}
               <div className="space-y-1">
-                <label className="block">{"ক্যাটাগরি"}</label>
+                <label className="block text-sm font-medium text-[--color-foreground] font-bengali">{"ক্যাটাগরি"}</label>
                 <select
                   value={categoryId}
                   onChange={(e) => setCategoryId(e.target.value)}
-                  className="w-full rounded-lg border p-2.5 font-bold"
+                  className="input-field"
                 >
                   {categories.map(c => (
                     <option key={c.id} value={c.id}>{c.category_name}</option>
@@ -725,52 +725,52 @@ export default function EmployeeProfilePage({ params }: PageProps) {
 
               {/* যোগদানের তারিখ (নতুন অপশন যুক্ত করা হয়েছে) */}
               <div className="space-y-1">
-                <label className="block">{"যোগদানের তারিখ"}</label>
+                <label className="block text-sm font-medium text-[--color-foreground] font-bengali">{"যোগদানের তারিখ"}</label>
                 <input
                   type="date"
                   required
                   value={joiningDate}
                   onChange={(e) => setJoiningDate(e.target.value)}
-                  className="w-full rounded-lg border p-2.5 font-bold"
+                  className="input-field"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="block">{"মাসিক বেতন"}</label>
+                <label className="block text-sm font-medium text-[--color-foreground] font-bengali">{"মাসিক বেতন"}</label>
                 <input
                   type="number"
                   required
                   value={monthlySalary}
                   onChange={(e) => setMonthlySalary(e.target.value)}
-                  className="w-full rounded-lg border p-2.5 font-bold"
+                  className="input-field font-body"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="block">{"অন্যান্য মন্তব্য"}</label>
+                <label className="block text-sm font-medium text-[--color-foreground] font-bengali">{"অন্যান্য মন্তব্য"}</label>
                 <textarea
                   value={remarks}
                   onChange={(e) => setRemarks(e.target.value)}
-                  className="w-full rounded-lg border p-2.5 font-bold"
+                  className="input-field"
                 />
               </div>
 
               {/* obligatoire audit */}
-              <div className="space-y-1 bg-red-50 p-3 rounded-lg border border-red-100">
-                <label className="block text-red-900 font-bold">{"পরিবর্তনের কারণ (বাধ্যতামূলক)"}</label>
+              <div className="space-y-1 bg-[--color-danger]/[0.08] p-3 rounded-lg border border-[--color-danger]/[0.15]">
+                <label className="block font-bengali font-bold text-[--color-danger]">{"পরিবর্তনের কারণ (বাধ্যতামূলক)"}</label>
                 <input
                   type="text"
                   required
                   placeholder="যেমন: ভুল বেতন সংশোধন বা প্রোমোশন"
                   value={changeReason}
                   onChange={(e) => setChangeReason(e.target.value)}
-                  className="w-full rounded-lg border bg-white p-2.5 font-bold text-gray-800"
+                  className="input-field bg-[--color-surface]"
                 />
               </div>
 
-              <div className="flex gap-4 pt-4 border-t">
-                <button type="button" onClick={() => setIsEditModalOpen(false)} className="flex-1 rounded-lg border py-3 font-bold cursor-pointer">{"বাতিল"}</button>
-                <button type="submit" disabled={submitting} className="flex-1 rounded-lg bg-[#8B0000] text-white py-3 font-bold cursor-pointer">
+              <div className="flex gap-4 pt-4 border-t border-[--color-border]">
+                <button type="button" onClick={() => setIsEditModalOpen(false)} className="flex-1 rounded-lg border border-[--color-border] py-3 font-body font-bold text-[--color-foreground-muted] hover:bg-[--color-surface-raised] cursor-pointer">{"বাতিল"}</button>
+                <button type="submit" disabled={submitting} className="btn-primary flex-1">
                   {submitting ? 'আপডেট হচ্ছে...' : 'তথ্য সেভ করুন'}
                 </button>
               </div>
@@ -783,35 +783,35 @@ export default function EmployeeProfilePage({ params }: PageProps) {
       {/* ৫. প্রোফাইল ডিলিট মডাল (Delete Profile Modal) */}
       {/* ========================================== */}
       {isDeleteModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl space-y-4">
-            <h2 className="text-xl font-bold text-gray-900 border-b pb-2 flex items-center gap-2">
-              <Trash2 className="h-5 w-5 text-red-600" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="glass w-full max-w-md space-y-4">
+            <h2 className="text-xl font-bold text-[--color-foreground] border-b border-[--color-border] pb-2 flex items-center gap-2 font-bengali">
+              <Trash2 className="h-5 w-5 text-[--color-danger]" />
               <span>{"প্রোফাইল ডিলিট করুন"}</span>
             </h2>
-            <form onSubmit={handleDeleteSubmit} className="space-y-4 text-base font-bold text-gray-700">
-              {errorMsg && <div className="rounded-lg bg-red-50 p-3 text-sm font-bold text-red-600">{errorMsg}</div>}
-              
-              <div className="space-y-1 bg-red-50 p-4 rounded-lg border border-red-100">
-                <p className="text-sm font-bold text-red-900">
+            <form onSubmit={handleDeleteSubmit} className="space-y-4 text-base font-body text-[--color-foreground]">
+              {errorMsg && <div className="rounded-lg bg-[--color-danger]/[0.08] p-3 text-sm font-bold text-[--color-danger]">{errorMsg}</div>}
+
+              <div className="space-y-1 bg-[--color-danger]/[0.08] p-4 rounded-lg border border-[--color-danger]/[0.15]">
+                <p className="text-sm font-bold text-[--color-danger] font-bengali">
                   {"সতর্কতা: প্রোফাইল ডিলিট করলে কর্মচারী নিষ্ক্রিয় হয়ে যাবে এবং তালিকায় দেখা যাবে না। তবে অতীতের বেতন পরিশোধ বা অগ্রিমের ইতিহাস সুরক্ষিত থাকবে।"}
                 </p>
               </div>
 
               <div className="space-y-1">
-                <label className="block text-red-950">{"ডিলিট করার সুনির্দিষ্ট কারণ (বাধ্যতামূলক)"}</label>
+                <label className="block text-sm font-medium text-[--color-foreground] font-bengali">{"ডিলিট করার সুনির্দিষ্ট কারণ (বাধ্যতামূলক)"}</label>
                 <textarea
                   required
                   placeholder="যেমন: চাকরি ছেড়ে চলে গেছেন বা ভুল তথ্য দিয়ে অ্যাকাউন্ট খোলা হয়েছিল।"
                   value={deleteReason}
                   onChange={(e) => setDeleteReason(e.target.value)}
-                  className="w-full rounded-lg border p-2.5 font-bold"
+                  className="input-field"
                 />
               </div>
 
-              <div className="flex gap-4 pt-4 border-t">
-                <button type="button" onClick={() => setIsDeleteModalOpen(false)} className="flex-1 rounded-lg border py-3 font-bold cursor-pointer">{"বাতিল"}</button>
-                <button type="submit" disabled={submitting} className="flex-1 rounded-lg bg-red-600 text-white py-3 font-bold cursor-pointer">
+              <div className="flex gap-4 pt-4 border-t border-[--color-border]">
+                <button type="button" onClick={() => setIsDeleteModalOpen(false)} className="flex-1 rounded-lg border border-[--color-border] py-3 font-body font-bold text-[--color-foreground-muted] hover:bg-[--color-surface-raised] cursor-pointer">{"বাতিল"}</button>
+                <button type="submit" disabled={submitting} className="flex-1 rounded-lg bg-[--color-danger] text-white py-3 font-body font-bold cursor-pointer hover:bg-[--color-danger]/90 transition-colors">
                   {submitting ? 'ডিলিট হচ্ছে...' : 'প্রোফাইল ডিলিট করুন'}
                 </button>
               </div>
