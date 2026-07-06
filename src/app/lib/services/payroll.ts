@@ -81,7 +81,7 @@ export class PayrollService {
   }
 
   /**
-   * নির্দিষ্ট মাসের বেতন হিসেব জেনারেট করা (Sprint 2: batch queries)
+   * নির্দিষ্ট মাসের বেতন হিসেব জেনারেট করা (পেমেন্ট প্রিজার্ভেশন ব্যাকআপ সহ)
    */
   static async generateMonthlyPayroll(
     month: string,
@@ -119,7 +119,23 @@ export class PayrollService {
       payrollId = existingPayroll.id;
     }
 
-    // ৩. পূর্বের পে-রোল আইটেমগুলো ক্লিয়ার করা নতুন করে জেনারেট করার জন্য
+    // 🛡️ ৩.১. (বাগ ফিক্স) ডিলিট করার আগে বিদ্যমান পরিশোধিত (is_paid) কর্মচারীদের ডাটা মেমোরিতে ব্যাকআপ রাখা
+    const { data: existingItems } = await db.payroll_items()
+      .select('employee_id, is_paid, paid_at, paid_by_name')
+      .eq('payroll_id', payrollId);
+
+    const paymentBackupMap = new Map<string, { is_paid: boolean; paid_at: string | null; paid_by_name: string | null }>();
+    if (existingItems) {
+      existingItems.forEach((item: Pick<PayrollItem, 'employee_id' | 'is_paid' | 'paid_at' | 'paid_by_name'>) => {
+        paymentBackupMap.set(item.employee_id, {
+          is_paid: item.is_paid || false,
+          paid_at: item.paid_at || null,
+          paid_by_name: item.paid_by_name || null
+        });
+      });
+    }
+
+    // ৩.২. পূর্বের পে-রোল আইটেমগুলো ক্লিয়ার করা নতুন করে জেনারেট করার জন্য
     const { error: deleteItemsError } = await db.payroll_items()
       .delete()
       .eq('payroll_id', payrollId);
@@ -170,7 +186,13 @@ export class PayrollService {
       // চ. নিট বেতন (Net Salary = Gross Salary − Advance Amount)
       const netSalary = Math.max(0, grossSalary - totalAdvance);
 
-      // ছ. পে-রোল আইটেম টেবিলে ডাটা সংরক্ষণ করা
+      // 🛡️ ছ.১. (বাগ ফিক্স) ব্যাকআপ মেমোরি থেকে ওল্ড পেমেন্ট স্ট্যাটাস উদ্ধার করা
+      const backup = paymentBackupMap.get(emp.id);
+      const finalIsPaid = backup ? backup.is_paid : false;
+      const finalPaidAt = backup ? backup.paid_at : null;
+      const finalPaidByName = backup ? backup.paid_by_name : null;
+
+      // ছ.২. পে-রোল আইটেম টেবিলে ডাটা সংরক্ষণ করা (সংরক্ষিত পেমেন্ট স্ট্যাটাস সহ)
       const { error: itemInsertError } = await db.payroll_items().insert({
         payroll_id: payrollId,
         employee_id: emp.id,
@@ -182,6 +204,9 @@ export class PayrollService {
         gross_salary: Math.round(grossSalary),
         advance_deducted: totalAdvance,
         net_salary: Math.round(netSalary),
+        is_paid: finalIsPaid,
+        paid_at: finalPaidAt,
+        paid_by_name: finalPaidByName
       });
 
       if (itemInsertError) throw itemInsertError;
