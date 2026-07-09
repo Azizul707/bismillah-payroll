@@ -72,6 +72,8 @@ export default function EmployeeProfilePage({ params }: PageProps) {
 
   const [resumeDate, setResumeDate] = useState('2026-06-24');
 
+  // এডভান্স ভ্যারিয়েবল ও নতুন ডেট স্টেট
+  const [advanceDate, setAdvanceDate] = useState('2026-07-09'); // Hydration ফলব্যাক
   const [advanceAmount, setAdvanceAmount] = useState('');
   const [advanceReason, setAdvanceReason] = useState('');
 
@@ -85,13 +87,13 @@ export default function EmployeeProfilePage({ params }: PageProps) {
       if (currentUserStr) {
         try {
           const parsed = JSON.parse(currentUserStr);
-          return `${parsed.role === 'owner' ? '' : 'Manager'} ${parsed.name}`;
+          return `${parsed.role === 'owner' ? 'মালিক' : 'ম্যানেজার'} ${parsed.name}`;
         } catch (e) {
           console.error('Error parsing session user:', e);
         }
       }
     }
-    return 'Editor Manager';
+    return 'এডিটর ম্যানেজার';
   }, []);
 
   // প্রোফাইল ডাটা লোড ফাংশন (মেমোইজড ও অ্যাসিনক্রোনাস মাইক্রোটাস্ক হ্যান্ডলার)
@@ -161,12 +163,20 @@ export default function EmployeeProfilePage({ params }: PageProps) {
     }
   }, [employeeId, router]);
 
-  // মাউন্ট ইফেক্ট
+  // মাউন্ট ইফেক্ট (Next.js 15 কমপ্লায়েন্ট অ্যাসিনক্রোনাস ডিফারেল)
   useEffect(() => {
     let active = true;
     (async () => {
+      await Promise.resolve(); // 🌟 রেন্ডার ক্যাস্কেডিং ও বিল্ড ফেল প্রতিরোধক মাইক্রো-টাস্ক টিক
       if (active) {
         await loadProfileData();
+        
+        // রিয়েল-টাইম আজকের তারিখ দিয়ে এডভান্স ডেট পিক ডিফল্ট করা হলো
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = String(now.getMonth() + 1).padStart(2, '0');
+        const d = String(now.getDate()).padStart(2, '0');
+        setAdvanceDate(`${y}-${m}-${d}`);
       }
     })();
     return () => {
@@ -178,7 +188,7 @@ export default function EmployeeProfilePage({ params }: PageProps) {
   async function handleEditSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!changeReason) {
-      setErrorMsg('তথ্য পরিবর্তনের কারণ উল্লেখ করা বাধ্যতামূলক।');
+      setErrorMsg('정보 পরিবর্তনের কারণ উল্লেখ করা বাধ্যতামূলক।');
       return;
     }
     try {
@@ -257,18 +267,22 @@ export default function EmployeeProfilePage({ params }: PageProps) {
     }
   }
 
-  // ঘ. অগ্রিম বেতন যুক্ত করার হ্যান্ডলার
+  // ঘ. অগ্রিম বেতন যুক্ত করার হ্যান্ডলার (তারিখ ভিত্তিক ডাইনামিক মাস ও সাল এক্সট্র্যাকশন)
   async function handleAdvanceSubmit(e: React.FormEvent) {
     e.preventDefault();
     try {
       setSubmitting(true);
-      const currentMonth = '06';
-      const currentYear = '2026';
+      
+      // প্রদানের তারিখ থেকে মাস ও বছর আলাদা করা হলো (যেমন: '2026-07-09' -> month: '07', year: '2026')
+      const dateParts = advanceDate.split('-');
+      const selectedMonth = dateParts[1]; // MM
+      const selectedYear = dateParts[0];  // YYYY
+
       await AdvanceService.addAdvance({
         employeeId,
         amount: Number(advanceAmount),
-        month: currentMonth,
-        year: currentYear,
+        month: selectedMonth,
+        year: selectedYear,
         reason: advanceReason,
         adminId: '00000000-0000-0000-0000-000000000000',
         adminName: getCurrentUserName()
@@ -445,7 +459,7 @@ export default function EmployeeProfilePage({ params }: PageProps) {
               className="col-span-2 flex items-center justify-center gap-2 rounded-xl border border-gray-200 py-3 text-center hover:bg-gray-50 text-sm font-semibold text-gray-700 transition-colors cursor-pointer"
             >
               <Pencil className="h-4 w-4" />
-              <span>{"Edit Profile"}</span>
+              <span>{"তথ্য পরিবর্তন করুন"}</span>
             </button>
 
             {/* প্রোফাইল ডিলিট করার বাটন */}
@@ -454,7 +468,7 @@ export default function EmployeeProfilePage({ params }: PageProps) {
               className="col-span-2 flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 py-3 text-center text-sm font-semibold text-red-700 transition-colors cursor-pointer"
             >
               <Trash2 className="h-4 w-4" />
-        <span>{"DELETE PROFILE"}</span>
+              <span>{"প্রোফাইল ডিলিট করুন"}</span>
             </button>
           </div>
         </div>
@@ -474,7 +488,7 @@ export default function EmployeeProfilePage({ params }: PageProps) {
             ) : (
               timeline.map((item) => (
                 <div key={item.id} className="flex gap-4 border-l-2 border-gray-100 pl-4 pb-2 relative">
-                  <div className={`absolute -left-7px top-1.5 h-3 w-3 rounded-full ${
+                  <div className={`absolute -left-[7px] top-1.5 h-3 w-3 rounded-full ${
                     item.status === 'active' ? 'bg-green-500' : 'bg-amber-500'
                   }`} />
                   <div className="text-base font-semibold text-gray-700">
@@ -544,7 +558,7 @@ export default function EmployeeProfilePage({ params }: PageProps) {
               <span>{"ছুটি শুরু করুন"}</span>
             </h2>
             <form onSubmit={handleLeaveSubmit} className="space-y-4 text-base font-semibold text-gray-700">
-              {errorMsg && <div className="rounded-lg bg-red-50 p-3 text-sm font-semibold text-red-600">{errorMsg}</div>}
+              {errorMsg && <div className="rounded-lg bg-red-50 p-3 text-sm font-bold text-red-600">{errorMsg}</div>}
               
               <div className="space-y-1">
                 <label className="block">{"ছুটি শুরু হওয়ার তারিখ"}</label>
@@ -642,6 +656,18 @@ export default function EmployeeProfilePage({ params }: PageProps) {
             <form onSubmit={handleAdvanceSubmit} className="space-y-4 text-base font-semibold text-gray-700">
               {errorMsg && <div className="rounded-lg bg-red-50 p-3 text-sm font-bold text-red-600">{errorMsg}</div>}
               
+              {/* অগ্রিম প্রদানের তারিখ ইনপুট (তারিখ ভিত্তিক বেতন কর্তনের জন্য নতুন কলাম) */}
+              <div className="space-y-1">
+                <label className="block text-gray-700 font-bold">{"অগ্রিম প্রদানের তারিখ"}</label>
+                <input
+                  type="date"
+                  required
+                  value={advanceDate}
+                  onChange={(e) => setAdvanceDate(e.target.value)}
+                  className="w-full rounded-lg border border-gray-200 bg-white p-2.5 font-bold text-gray-800"
+                />
+              </div>
+
               <div className="space-y-1">
                 <label className="block">{"টাকার পরিমাণ (ইংলিশ সংখ্যায়)"}</label>
                 <input
@@ -812,7 +838,7 @@ export default function EmployeeProfilePage({ params }: PageProps) {
               </div>
 
               <div className="flex gap-4 pt-4 border-t border-gray-100">
-                <button type="button" onClick={() => setIsDeleteModalOpen(false)} className="flex-1 rounded-lg border border-gray-200 py-3 font-bold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">{"বাতিল"}</button>
+                <button type="button" onClick={() => setIsDeleteModalOpen(false)} className="flex-1 rounded-lg border py-3 font-bold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">{"বাতিল"}</button>
                 <button type="submit" disabled={submitting} className="flex-1 rounded-lg bg-red-600 hover:bg-red-700 text-white py-3 font-bold transition-colors cursor-pointer disabled:opacity-50">
                   {submitting ? 'ডিলিট হচ্ছে...' : 'প্রোফাইল ডিলিট করুন'}
                 </button>

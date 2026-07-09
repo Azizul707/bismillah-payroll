@@ -60,12 +60,14 @@ export class PayrollService {
     }
 
     // ৪. ৩০ দিনের ধ্রুবক নিয়ম (30-day Constant Divisor Rule) অনুযায়ী সমন্বয়
+    // (মোট অনুপস্থিত দিন ও ডিউটি দিনের যোগফল সর্বদা ৩০ হতে হবে)
     const totalDeductedDays = absentDays + missedDaysDueToJoining;
     const dutyDays = Math.max(0, 30 - totalDeductedDays);
+    const normalizedAbsentDays = 30 - dutyDays; // Enforces absolute 30-day month limit
 
     return {
       dutyDays,
-      absentDays: totalDeductedDays,
+      absentDays: normalizedAbsentDays,
     };
   }
 
@@ -159,9 +161,9 @@ export class PayrollService {
     if (advError) throw advError;
     const allAdvances = (advData as SalaryAdvance[]) || [];
 
-    // ৭. প্রতিটি কর্মচারীর বেতন হিসাব করা (in-memory filtering)
+    // ७. প্রতিটি কর্মচারীর বেতন হিসাব করা (in-memory filtering)
     for (const emp of employees) {
-      // ক. ডিউটি এবং অনুপস্থিত দিন হিসেব (টাইমজোন-সেফ স্ট্রিং তুলনা)
+      // ক. ডিউটি এবং অনুপস্থিত দিন হিসেব (টাইমজোন-সেফ স্ট্রিং তুলনা ও ৩০ দিনের সমন্বয়)
       const { dutyDays, absentDays } = await this.calculateDutyDays(
         emp.id,
         emp.joining_date,
