@@ -491,7 +491,7 @@ export default function EmployeeProfilePage({ params }: PageProps) {
               className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-red-100 bg-red-50 hover:bg-red-100/50 p-3 text-center transition-colors cursor-pointer"
             >
               <Coins className="h-6 w-6 text-[#8B0000]" />
-              <span className="text-sm font-black text-red-900">{"অগ্রিম প্রদান"}</span>
+              <span className="text-sm font-black text-red-900">{"Pay Advance"}</span>
             </button>
 
             <button
@@ -499,7 +499,7 @@ export default function EmployeeProfilePage({ params }: PageProps) {
               className="col-span-2 flex items-center justify-center gap-2 rounded-xl border border-gray-200 py-3 text-center hover:bg-gray-50 text-sm font-semibold text-gray-700 transition-colors cursor-pointer"
             >
               <Pencil className="h-4 w-4" />
-              <span>{"정보 변경"}</span>
+              <span>{"Edite Profile"}</span>
             </button>
 
             {/* প্রোফাইল ডিলিট করার বাটন */}
@@ -508,7 +508,7 @@ export default function EmployeeProfilePage({ params }: PageProps) {
               className="col-span-2 flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 py-3 text-center text-sm font-semibold text-red-700 transition-colors cursor-pointer"
             >
               <Trash2 className="h-4 w-4" />
-              <span>{"প্রোফাইল ডিলিট করুন"}</span>
+              <span>{"Delete Profile"}</span>
             </button>
           </div>
         </div>
