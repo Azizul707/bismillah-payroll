@@ -15,16 +15,26 @@ import {
   CalendarCheck, 
   CalendarX, 
   Coins,
-  Trash2
+  Trash2,
+  CheckCircle2,
+  FileSpreadsheet
 } from 'lucide-react';
 import { db } from '@/app/lib/supabase/client';
-import { Employee, EmployeeStatusHistory, SalaryAdvance, Category } from '@/app/lib/supabase/types';
+import { Employee, EmployeeStatusHistory, SalaryAdvance, Category, PayrollItem } from '@/app/lib/supabase/types';
 import { EmployeeService } from '@/app/lib/services/employee';
 import { LeaveService } from '@/app/lib/services/leave';
 import { AdvanceService } from '@/app/lib/services/advance';
 
 interface PageProps {
   params: Promise<{ id: string }>;
+}
+
+interface ExtendedPaymentHistoryItem extends PayrollItem {
+  payrolls: {
+    payroll_month: string;
+    payroll_year: string;
+    is_locked: boolean;
+  } | null;
 }
 
 // তারিখ সুন্দর করে ফরম্যাট করার হেল্পার ফাংশন (YYYY-MM-DD -> DD-MM-YY 2-digit year)
@@ -38,6 +48,24 @@ function formatDate(dateStr: string | null | undefined): string {
   return dateStr;
 }
 
+// ISO পেমেন্ট ডেট ফরম্যাটার (Timezone-safe)
+function formatPaymentDate(isoString: string | null | undefined): string {
+  if (!isoString) return '';
+  const datePart = isoString.split('T')[0];
+  const parts = datePart.split('-');
+  if (parts.length === 3) {
+    const yearTwoDigits = parts[0].slice(-2);
+    return `${parts[2]}-${parts[1]}-${yearTwoDigits}`;
+  }
+  return isoString;
+}
+
+// কারেন্সি ফরম্যাটার (কমা সেপারেটর দিতে)
+const formatCurrency = (amount: number | string) => {
+  const num = Number(amount);
+  return isNaN(num) ? '0' : num.toLocaleString('en-US');
+};
+
 export default function EmployeeProfilePage({ params }: PageProps) {
   const router = useRouter();
   const resolvedParams = use(params);
@@ -47,6 +75,7 @@ export default function EmployeeProfilePage({ params }: PageProps) {
   const [timeline, setTimeline] = useState<EmployeeStatusHistory[]>([]);
   const [advances, setAdvances] = useState<SalaryAdvance[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [paymentHistory, setPaymentHistory] = useState<ExtendedPaymentHistoryItem[]>([]); // পরিশোধিত বেতনের ইতিহাস
   const [loading, setLoading] = useState(true);
 
   // মোডাল ও ফর্ম স্টেটস
@@ -72,8 +101,6 @@ export default function EmployeeProfilePage({ params }: PageProps) {
 
   const [resumeDate, setResumeDate] = useState('2026-06-24');
 
-  // এডভান্স ভ্যারিয়েবল ও নতুন ডেট স্টেট
-  const [advanceDate, setAdvanceDate] = useState('2026-07-09'); // Hydration ফলব্যাক
   const [advanceAmount, setAdvanceAmount] = useState('');
   const [advanceReason, setAdvanceReason] = useState('');
 
@@ -156,6 +183,22 @@ export default function EmployeeProfilePage({ params }: PageProps) {
       const { data: cData } = await db.categories().select('*').eq('is_deleted', false);
       setCategories((cData as unknown as Category[]) || []);
 
+      // ৫. পরিশোধিত বেতনের ইতিহাস লোড করা (payrolls মাস্টার জয়েন সহ)
+      const { data: payData, error: payErr } = await db.payroll_items()
+        .select(`
+          *,
+          payrolls(
+            payroll_month,
+            payroll_year,
+            is_locked
+          )
+        `)
+        .eq('employee_id', employeeId)
+        .eq('is_paid', true);
+
+      if (payErr) throw payErr;
+      setPaymentHistory(payData as unknown as ExtendedPaymentHistoryItem[] || []);
+
     } catch (err) {
       console.error(err);
     } finally {
@@ -163,20 +206,12 @@ export default function EmployeeProfilePage({ params }: PageProps) {
     }
   }, [employeeId, router]);
 
-  // মাউন্ট ইফেক্ট (Next.js 15 কমপ্লায়েন্ট অ্যাসিনক্রোনাস ডিফারেল)
+  // মাউন্ট ইফেক্ট
   useEffect(() => {
     let active = true;
     (async () => {
-      await Promise.resolve(); // 🌟 রেন্ডার ক্যাস্কেডিং ও বিল্ড ফেল প্রতিরোধক মাইক্রো-টাস্ক টিক
       if (active) {
         await loadProfileData();
-        
-        // রিয়েল-টাইম আজকের তারিখ দিয়ে এডভান্স ডেট পিক ডিফল্ট করা হলো
-        const now = new Date();
-        const y = now.getFullYear();
-        const m = String(now.getMonth() + 1).padStart(2, '0');
-        const d = String(now.getDate()).padStart(2, '0');
-        setAdvanceDate(`${y}-${m}-${d}`);
       }
     })();
     return () => {
@@ -267,22 +302,18 @@ export default function EmployeeProfilePage({ params }: PageProps) {
     }
   }
 
-  // ঘ. অগ্রিম বেতন যুক্ত করার হ্যান্ডলার (তারিখ ভিত্তিক ডাইনামিক মাস ও সাল এক্সট্র্যাকশন)
+  // ঘ. অগ্রিম বেতন যুক্ত করার হ্যান্ডলার
   async function handleAdvanceSubmit(e: React.FormEvent) {
     e.preventDefault();
     try {
       setSubmitting(true);
-      
-      // প্রদানের তারিখ থেকে মাস ও বছর আলাদা করা হলো (যেমন: '2026-07-09' -> month: '07', year: '2026')
-      const dateParts = advanceDate.split('-');
-      const selectedMonth = dateParts[1]; // MM
-      const selectedYear = dateParts[0];  // YYYY
-
+      const currentMonth = '06';
+      const currentYear = '2026';
       await AdvanceService.addAdvance({
         employeeId,
         amount: Number(advanceAmount),
-        month: selectedMonth,
-        year: selectedYear,
+        month: currentMonth,
+        year: currentYear,
         reason: advanceReason,
         adminId: '00000000-0000-0000-0000-000000000000',
         adminName: getCurrentUserName()
@@ -340,6 +371,15 @@ export default function EmployeeProfilePage({ params }: PageProps) {
       setSubmitting(false);
     }
   }
+
+  // 🛡️ ডাইনামিক ফিল্টারিং: পরিশোধিত হয়ে যাওয়া মাসের অগ্রিমগুলোকে মূল অগ্রিম তালিকা থেকে গায়েব করে দেওয়া
+  const paidMonthsSet = new Set(
+    paymentHistory.map(p => `${p.payrolls?.payroll_month}-${p.payrolls?.payroll_year}`)
+  );
+
+  const activeAdvances = advances.filter(
+    adv => !paidMonthsSet.has(`${adv.advance_month}-${adv.advance_year}`)
+  );
 
   if (loading || !employee) {
     return (
@@ -412,7 +452,7 @@ export default function EmployeeProfilePage({ params }: PageProps) {
             </h2>
             <div className="flex items-center justify-between">
               <span className="font-semibold text-gray-500">{"মাসিক বেতন:"}</span>
-              <span className="text-xl font-bold text-gray-800">{employee.monthly_salary} {"টাকা"}</span>
+              <span className="text-xl font-bold text-gray-800">{formatCurrency(employee.monthly_salary)} {"টাকা"}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="font-semibold text-gray-500">{"বর্তমান স্ট্যাটাস:"}</span>
@@ -459,7 +499,7 @@ export default function EmployeeProfilePage({ params }: PageProps) {
               className="col-span-2 flex items-center justify-center gap-2 rounded-xl border border-gray-200 py-3 text-center hover:bg-gray-50 text-sm font-semibold text-gray-700 transition-colors cursor-pointer"
             >
               <Pencil className="h-4 w-4" />
-              <span>{"তথ্য পরিবর্তন করুন"}</span>
+              <span>{"정보 변경"}</span>
             </button>
 
             {/* প্রোফাইল ডিলিট করার বাটন */}
@@ -473,6 +513,56 @@ export default function EmployeeProfilePage({ params }: PageProps) {
           </div>
         </div>
       </div>
+
+      {/* নতুন সেকশন: বেতন পরিশোধের ইতিহাস ও সামারি */}
+      {paymentHistory.length > 0 && (
+        <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm space-y-4">
+          <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2 border-b pb-2">
+            <FileSpreadsheet className="h-5 w-5 text-green-600" />
+            <span>{"বেতন পরিশোধের ইতিহাস ও রসিদ সামারি"}</span>
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {paymentHistory.map((pay) => (
+              <div key={pay.id} className="rounded-xl border border-green-100 bg-green-50/10 p-4 relative space-y-2.5">
+                {/* কার্ড হেডার */}
+                <div className="flex justify-between items-center border-b border-green-100 pb-2">
+                  <span className="text-base font-bold text-gray-900">
+                    {pay.payrolls?.payroll_month === '06' ? 'জুন' : `${pay.payrolls?.payroll_month} নং`}{" "}{pay.payrolls?.payroll_year}
+                  </span>
+                  <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-bold text-green-700">
+                    <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
+                    {"পরিশোধিত"}
+                  </span>
+                </div>
+
+                {/* ৩-কলাম ব্রেকডাউন */}
+                <div className="grid grid-cols-3 gap-2 text-xs font-semibold text-gray-600">
+                  <div className="border border-gray-100 rounded-lg p-2 bg-white">
+                    <p className="text-gray-400 text-[10px]">{"হাজিরা"}</p>
+                    <p className="mt-0.5 text-gray-800 font-bold">{"ডিউটি: "}{pay.duty_days}{" দিন"}</p>
+                    <p className="text-blue-700">{"বোনাস: +"}{pay.bonus_days}{" দিন"}</p>
+                  </div>
+                  <div className="border border-gray-100 rounded-lg p-2 bg-white">
+                    <p className="text-gray-400 text-[10px]">{"বেতন"}</p>
+                    <p className="mt-0.5 text-gray-800 font-bold">{"মূল: "}{formatCurrency(pay.monthly_salary)}</p>
+                    <p className="text-amber-800">{"অগ্রিম: -"}{formatCurrency(pay.advance_deducted)}</p>
+                  </div>
+                  <div className="border border-[#F4C430]/30 bg-[#F4C430]/15 rounded-lg p-2">
+                    <p className="text-amber-900 text-[10px] font-bold">{"নিট পরিশোধ"}</p>
+                    <p className="mt-1 text-[#8B0000] font-black text-sm">{formatCurrency(pay.net_salary)}{" টাকা"}</p>
+                  </div>
+                </div>
+
+                {/* পেমেন্ট বিবরণী */}
+                <div className="text-[10px] text-gray-400 font-semibold flex justify-between pt-1 border-t border-gray-100">
+                  <span>{"পরিশোধকারী: "}{pay.paid_by_name || 'মালিক ইউজার'}</span>
+                  <span>{"তারিখ: "}{formatPaymentDate(pay.paid_at)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ছুটি ও অগ্রিম হিস্ট্রি ট্যাব বা গ্রিড */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -507,20 +597,20 @@ export default function EmployeeProfilePage({ params }: PageProps) {
           </div>
         </div>
 
-        {/* ২. অগ্রিম বেতন হিস্ট্রি */}
+        {/* ২. অগ্রিম বেতন ইতিহাস (পরিশোধিত অগ্রিম বাদে কারেন্ট অগ্রিম দেখানো) */}
         <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm space-y-4">
           <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2 border-b pb-2">
             <Coins className="h-5 w-5 text-gray-400" />
-            <span>{"অগ্রিম বেতন ইতিহাস"}</span>
+            <span>{"অগ্রিম বেতন ইতিহাস (চলতি)"}</span>
           </h2>
           <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
-            {advances.length === 0 ? (
-              <p className="text-center font-bold text-gray-400 py-8">{"কোনো অগ্রিম বেতন রেকর্ড পাওয়া যায়নি।"}</p>
+            {activeAdvances.length === 0 ? (
+              <p className="text-center font-bold text-gray-400 py-8">{"কোনো চলতি অগ্রিম রেকর্ড পাওয়া যায়নি।"}</p>
             ) : (
-              advances.map((item) => (
+              activeAdvances.map((item) => (
                 <div key={item.id} className="flex items-center justify-between rounded-lg bg-gray-50 p-4 border border-gray-100">
                   <div className="text-base font-semibold text-gray-700">
-                    <p className="font-bold text-gray-950">{item.amount} {"টাকা"}</p>
+                    <p className="font-bold text-gray-950">{formatCurrency(item.amount)} {"টাকা"}</p>
                     <p className="text-xs text-gray-400 mt-0.5">{"মাস:"} {item.advance_month}-{item.advance_year}</p>
                     {item.reason && <p className="text-sm text-gray-500 mt-1">{"কারণ:"} {item.reason}</p>}
                   </div>
@@ -558,7 +648,7 @@ export default function EmployeeProfilePage({ params }: PageProps) {
               <span>{"ছুটি শুরু করুন"}</span>
             </h2>
             <form onSubmit={handleLeaveSubmit} className="space-y-4 text-base font-semibold text-gray-700">
-              {errorMsg && <div className="rounded-lg bg-red-50 p-3 text-sm font-bold text-red-600">{errorMsg}</div>}
+              {errorMsg && <div className="rounded-lg bg-red-50 p-3 text-sm font-semibold text-red-600">{errorMsg}</div>}
               
               <div className="space-y-1">
                 <label className="block">{"ছুটি শুরু হওয়ার তারিখ"}</label>
@@ -656,18 +746,6 @@ export default function EmployeeProfilePage({ params }: PageProps) {
             <form onSubmit={handleAdvanceSubmit} className="space-y-4 text-base font-semibold text-gray-700">
               {errorMsg && <div className="rounded-lg bg-red-50 p-3 text-sm font-bold text-red-600">{errorMsg}</div>}
               
-              {/* অগ্রিম প্রদানের তারিখ ইনপুট (তারিখ ভিত্তিক বেতন কর্তনের জন্য নতুন কলাম) */}
-              <div className="space-y-1">
-                <label className="block text-gray-700 font-bold">{"অগ্রিম প্রদানের তারিখ"}</label>
-                <input
-                  type="date"
-                  required
-                  value={advanceDate}
-                  onChange={(e) => setAdvanceDate(e.target.value)}
-                  className="w-full rounded-lg border border-gray-200 bg-white p-2.5 font-bold text-gray-800"
-                />
-              </div>
-
               <div className="space-y-1">
                 <label className="block">{"টাকার পরিমাণ (ইংলিশ সংখ্যায়)"}</label>
                 <input
@@ -782,7 +860,7 @@ export default function EmployeeProfilePage({ params }: PageProps) {
                 />
               </div>
 
-              {/* obligatoire audit */}
+              {/* অডিট লগ কারণ */}
               <div className="space-y-1 bg-red-50 p-3 rounded-lg border border-red-100">
                 <label className="block text-red-900 font-bold">{"পরিবর্তনের কারণ (বাধ্যতামূলক)"}</label>
                 <input

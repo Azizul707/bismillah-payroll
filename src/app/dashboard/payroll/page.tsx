@@ -49,14 +49,17 @@ async function fetchCategoriesOnce(): Promise<{ id: string; category_name: strin
   return categoryCache.data;
 }
 
-// পেমেন্ট তারিখ ফরম্যাটার
+// Timezone-safe payment date formatter (Pure String Split — no Date constructor)
 function formatPaymentDate(isoString: string | null): string {
   if (!isoString) return '';
-  const date = new Date(isoString);
-  const d = String(date.getDate()).padStart(2, '0');
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const y = date.getFullYear();
-  return `${d}-${m}-${y}`;
+  // Extract only the date part "YYYY-MM-DD" before the "T"
+  const datePart = isoString.split('T')[0];
+  const parts = datePart.split('-');
+  if (parts.length === 3) {
+    const yearTwoDigits = parts[0].slice(-2);
+    return `${parts[2]}-${parts[1]}-${yearTwoDigits}`; // Returns DD-MM-YY
+  }
+  return isoString;
 }
 
 // টাইপস্ক্রিপ্ট কলার ফিক্স
@@ -185,7 +188,23 @@ export default function PayrollPage() {
     }
   }, [selectedMonth, selectedYear]);
 
-  // মাউন্ট এবং সিলেকশন পরিবর্তনের ওপর ভিত্তি করে রিলোড লজিক
+  // Dynamic current month/year init from system clock (Next.js 15 deferred microtask)
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      await Promise.resolve();
+      if (active) {
+        const now = new Date();
+        const m = String(now.getMonth() + 1).padStart(2, '0');
+        const y = now.getFullYear().toString();
+        setSelectedMonth(m);
+        setSelectedYear(y);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
+
+  // Load data on mount and when month/year selection changes
   useEffect(() => {
     let active = true;
     (async () => {
@@ -194,10 +213,8 @@ export default function PayrollPage() {
         await loadPayrollData();
       }
     })();
-    return () => {
-      active = false;
-    };
-  }, [loadPayrollData, loadCategoriesData]);
+    return () => { active = false; };
+  }, [loadPayrollData, loadCategoriesData, selectedMonth, selectedYear]);
 
   // বেতন জেনারেট করার অ্যাকশন হ্যান্ডলার
   async function handleGeneratePayroll() {

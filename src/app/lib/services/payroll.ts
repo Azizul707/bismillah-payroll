@@ -4,7 +4,7 @@ import { AuditService } from './audit';
 
 export class PayrollService {
   /**
-   * নির্দিষ্ট মাস ও বছরের জন্য নির্দিষ্ট কর্মচারীর উপস্থিত দিন (Duty Days) এবং অনুপস্থিত দিন হিসেব করা (টাইমজোন-সেফ)
+   * নির্দিষ্ট মাস ও বছরের জন্য নির্দিষ্ট কর্মচারীর উপস্থিত দিন (Duty Days) এবং অনুপস্থিত দিন হিসেব করা (টাইমজোন-সেফ ও প্রো-রাটা স্কেলড)
    */
   static async calculateDutyDays(
     employeeId: string,
@@ -13,7 +13,7 @@ export class PayrollService {
     year: string   // '2026'
   ): Promise<{ dutyDays: number; absentDays: number }> {
     const endOfMonth = new Date(parseInt(year, 10), parseInt(month, 10), 0);
-    const totalDaysInMonth = endOfMonth.getDate(); // ক্যালেন্ডার মাসের আসল দিন
+    const totalDaysInMonth = endOfMonth.getDate(); // ক্যালেন্ডার মাসের আসল দিন (২৮, ৩০ বা ৩১)
 
     const endOfMonthStr = `${year}-${month}-${String(totalDaysInMonth).padStart(2, '0')}`;
 
@@ -59,9 +59,13 @@ export class PayrollService {
       }
     }
 
-    // ৪. ৩০ দিনের ধ্রুবক নিয়ম (30-day Constant Divisor Rule) অনুযায়ী সমন্বয়
-    // (মোট অনুপস্থিত দিন ও ডিউটি দিনের যোগফল সর্বদা ৩০ হতে হবে)
-    const totalDeductedDays = absentDays + missedDaysDueToJoining;
+    // ৪. ৩০ দিনের ধ্রুবক নিয়ম (30-day Constant Divisor Rule) অনুযায়ী প্রো-রাটা স্কেলিং করা
+    // (মোট অনুপস্থিত দিন ও ডিউটি দিনের যোগফল ২৮, ৩০ বা ৩১ দিনের মাসেও সর্বদা ৩০ এর অনুপাতে থাকবে)
+    const physicalDeductedDays = absentDays + missedDaysDueToJoining;
+    
+    // গাণিতিকভাবে ৩০ দিনে রূপান্তর (Pro-rata proportional scaling)
+    const totalDeductedDays = Math.round((physicalDeductedDays / totalDaysInMonth) * 30);
+    
     const dutyDays = Math.max(0, 30 - totalDeductedDays);
     const normalizedAbsentDays = 30 - dutyDays; // Enforces absolute 30-day month limit
 
@@ -121,7 +125,7 @@ export class PayrollService {
       payrollId = existingPayroll.id;
     }
 
-    // 🛡️ ৩.১. (বাগ ফিক্স) ডিলিট করার আগে বিদ্যমান পরিশোধিত (is_paid) কর্মচারীদের ডাটা মেমোরিতে ব্যাকআপ রাখা
+    // 🛡️ ৩.১. ডিলিট করার আগে বিদ্যমান পরিশোধিত (is_paid) কর্মচারীদের ডাটা মেমোরিতে ব্যাকআপ রাখা
     const { data: existingItems } = await db.payroll_items()
       .select('employee_id, is_paid, paid_at, paid_by_name')
       .eq('payroll_id', payrollId);
@@ -163,7 +167,7 @@ export class PayrollService {
 
     // ७. প্রতিটি কর্মচারীর বেতন হিসাব করা (in-memory filtering)
     for (const emp of employees) {
-      // ক. ডিউটি এবং অনুপস্থিত দিন হিসেব (টাইমজোন-সেফ স্ট্রিং তুলনা ও ৩০ দিনের সমন্বয়)
+      // ক. ডিউটি এবং অনুপস্থিত দিন হিসেব (টাইমজোন-সেফ স্ট্রিং তুলনা ও ৩০ দিনের প্রো-রাটা সমন্বয়)
       const { dutyDays, absentDays } = await this.calculateDutyDays(
         emp.id,
         emp.joining_date,
@@ -188,7 +192,7 @@ export class PayrollService {
       // চ. নিট বেতন (Net Salary = Gross Salary − Advance Amount)
       const netSalary = Math.max(0, grossSalary - totalAdvance);
 
-      // 🛡️ ছ.১. (বাগ ফিক্স) ব্যাকআপ মেমোরি থেকে ওল্ড পেমেন্ট স্ট্যাটাস উদ্ধার করা
+      // 🛡️ ছ.১. ব্যাকআপ মেমোরি থেকে ওল্ড পেমেন্ট স্ট্যাটাস উদ্ধার করা
       const backup = paymentBackupMap.get(emp.id);
       const finalIsPaid = backup ? backup.is_paid : false;
       const finalPaidAt = backup ? backup.paid_at : null;

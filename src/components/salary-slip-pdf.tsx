@@ -24,14 +24,17 @@ const formatCurrency = (amount: number | string) => {
   return isNaN(num) ? '0' : num.toLocaleString('en-US');
 };
 
-// পেমেন্ট তারিখ ফরম্যাটার
+// Timezone-safe payment date formatter (Pure String Split — no Date constructor)
 function formatPaymentDate(isoString: string | null): string {
   if (!isoString) return '';
-  const date = new Date(isoString);
-  const d = String(date.getDate()).padStart(2, '0');
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const y = date.getFullYear();
-  return `${d}-${m}-${y}`;
+  // Extract only the date part "YYYY-MM-DD" before the "T"
+  const datePart = isoString.split('T')[0];
+  const parts = datePart.split('-');
+  if (parts.length === 3) {
+    const yearTwoDigits = parts[0].slice(-2);
+    return `${parts[2]}-${parts[1]}-${yearTwoDigits}`; // Returns DD-MM-YY
+  }
+  return isoString;
 }
 
 // ২. স্ট্যান্ডার্ড A4 পেজের শীর্ষে ভাউচার স্থাপন ও বড় টেক্সট উপযোগী স্টাইলশিট
