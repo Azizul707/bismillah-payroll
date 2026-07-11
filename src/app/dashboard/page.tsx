@@ -6,7 +6,6 @@ import {
   UserCheck,
   CalendarX,
   Banknote,
-  Sparkles,
   RefreshCw,
 } from 'lucide-react';
 import { db } from '@/app/lib/supabase/client';
@@ -200,7 +199,6 @@ export default function DashboardPage() {
     { label: 'ছুটিতে', labelEn: 'On Leave', value: stats.leaveEmployees, suffix: 'জন', icon: CalendarX, color: 'text-[--color-warning]', bg: 'bg-[--color-warning]/[0.08]' },
     { label: `চলতি মাসের অগ্রিম`, labelEn: 'This Month Advances', value: formatCurrency(stats.totalAdvancesThisMonth), suffix: 'টাকা', icon: Banknote, color: 'text-[--color-warning]', bg: 'bg-[--color-warning]/[0.08]', isCurrency: true },
     { label: 'আনুমানিক বেতন বাজেট', labelEn: 'Est. Payroll Budget', value: formatCurrency(stats.estimatedSalaryThisMonth), suffix: 'টাকা', icon: Banknote, color: 'text-[--color-primary]', bg: 'bg-[--color-primary]/[0.06]', isCurrency: true },
-    { label: 'AI পরামর্শ', labelEn: 'AI Insights', value: '৩', suffix: '', icon: Sparkles, color: 'text-[--color-accent]', bg: 'bg-[--color-accent]/[0.08]' },
   ];
 
   return (
@@ -286,24 +284,6 @@ export default function DashboardPage() {
               </table>
             </div>
           )}
-        </div>
-
-        {/* AI Insights Panel */}
-        <div className="glass p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-[--color-accent] font-bengali mb-1">{"AI পরামর্শ"}</p>
-          <h2 className="text-lg font-semibold text-[--color-foreground] font-bengali mb-4">{"পাঠকালীন সূচনা"}</h2>
-          <div className="space-y-3">
-            {[
-              { icon: Sparkles, text: 'এই মাসে মোট অগ্রিমের পরিমাণ গত মাসের তুলনায় ১৫% বেশি হয়েছে, মনোযোগ দিন।', color: 'text-[--color-warning]', bg: 'bg-[--color-warning]/[0.08]' },
-              { icon: Sparkles, text: '২ জন কর্মচারী presently on unpaid leave — check their return schedule.', color: 'text-[--color-accent]', bg: 'bg-[--color-accent]/[0.08]' },
-              { icon: Sparkles, text: 'বেতন স্লিপ ডাউনলোডে নতুন পেমেন্ট ট্র্যাকিং ফিচার চালু হয়েছে।', color: 'text-[--color-success]', bg: 'bg-[--color-success]/[0.08]' },
-            ].map((insight, i) => (
-              <div key={i} className={`rounded-[--radius-sm] ${insight.bg} p-3 flex gap-2.5`}>
-                <insight.icon className={`h-4 w-4 ${insight.color} shrink-0 mt-0.5`} />
-                <p className="text-xs font-semibold text-[--color-foreground] font-bengali leading-relaxed">{insight.text}</p>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
 

@@ -17,10 +17,16 @@ Font.register({
   src: 'https://cdn.jsdelivr.net/gh/sh4hids/bangla-web-fonts@solaimanlipi/subset-SolaimanLipiNormal.ttf',
 });
 
-// কারেন্সি কমা সেপারেটর হেল্পার ফাংশন
+// বাঙলা সংখ্যায় রূপান্তর (০১২৩৪৫৬৭৮৯)
+const toBengaliNumerals = (str: string | number): string => {
+  const bd = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+  return String(str).replace(/[0-9]/g, (d) => bd[parseInt(d)]);
+};
+
+// কারেন্সি কমা সেপারেটর হেল্পার ফাংশন — বাঙলা সংখ্যায়
 const formatCurrency = (amount: number | string) => {
   const num = Number(amount);
-  return isNaN(num) ? '0' : num.toLocaleString('en-US');
+  return isNaN(num) ? '০' : toBengaliNumerals(num.toLocaleString('en-US'));
 };
 
 // Timezone-safe payment date formatter (Pure String Split — no Date constructor)
@@ -30,9 +36,9 @@ function formatPaymentDate(isoString: string | null): string {
   const parts = datePart.split('-');
   if (parts.length === 3) {
     const yearTwoDigits = parts[0].slice(-2);
-    return `${parts[2]}-${parts[1]}-${yearTwoDigits}`;
+    return toBengaliNumerals(`${parts[2]}-${parts[1]}-${yearTwoDigits}`);
   }
-  return isoString;
+  return toBengaliNumerals(isoString);
 }
 
 // ২. স্ট্যান্ডার্ড A4 পেজের শীর্ষে ভাউচার স্থাপন ও বড় টেক্সট উপযোগী স্টাইলশিট
@@ -113,8 +119,8 @@ const styles = StyleSheet.create({
   },
   netSalaryRow: {
     marginTop: 6,
-    padding: 6,
-    backgroundColor: '#F4C430',
+    padding: 10,
+    backgroundColor: '#8B0000',
     borderRadius: 4,
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -123,12 +129,12 @@ const styles = StyleSheet.create({
   netSalaryLabel: {
     fontSize: 10,
     fontWeight: 'bold',
-    color: '#000000',
+    color: '#FFFFFF',
   },
   netSalaryValue: {
     fontSize: 13,
     fontWeight: 'bold',
-    color: '#8B0000',
+    color: '#FFFFFF',
   },
   signatureRow: {
     flexDirection: 'row',
@@ -169,6 +175,7 @@ const styles = StyleSheet.create({
 interface SalarySlipData {
   employeeName: string;
   employeeCode: string;
+  employeePhone: string;
   branchName: string;
   categoryName: string;
   month: string;
@@ -200,7 +207,7 @@ const SalarySlipDocument = ({ data, printDate }: { data: SalarySlipData; printDa
             <Text style={styles.columnTitle}>{"কর্মচারির বিবরণ"}</Text>
             <View style={styles.fieldRow}>
               <Text style={styles.fieldLabel}>{"কোড:"}</Text>
-              <Text style={styles.fieldValue}>{data.employeeCode}</Text>
+              <Text style={styles.fieldValue}>{toBengaliNumerals(data.employeeCode)}</Text>
             </View>
             <View style={styles.fieldRow}>
               <Text style={styles.fieldLabel}>{"নাম:"}</Text>
@@ -210,25 +217,31 @@ const SalarySlipDocument = ({ data, printDate }: { data: SalarySlipData; printDa
               <Text style={styles.fieldLabel}>{"ক্যাটাগরি:"}</Text>
               <Text style={styles.fieldValue}>{data.categoryName}</Text>
             </View>
+            {data.employeePhone && (
+              <View style={[styles.fieldRow, { borderBottomWidth: 0 }]}>
+                <Text style={styles.fieldLabel}>{"মোবাইল:"}</Text>
+                <Text style={styles.fieldValue}>{toBengaliNumerals(data.employeePhone)}</Text>
+              </View>
+            )}
           </View>
 
           <View style={styles.column}>
             <Text style={styles.columnTitle}>{"হাজিরা বিবরণী"}</Text>
             <View style={styles.fieldRow}>
               <Text style={styles.fieldLabel}>{"বেতন মাস:"}</Text>
-              <Text style={styles.fieldValue}>{`${data.month}-${data.year}`}</Text>
+              <Text style={styles.fieldValue}>{toBengaliNumerals(`${data.month}-${data.year}`)}</Text>
             </View>
             <View style={styles.fieldRow}>
               <Text style={styles.fieldLabel}>{"উপস্থিত দিন:"}</Text>
-              <Text style={styles.fieldValue}>{`${data.dutyDays} দিন`}</Text>
+              <Text style={styles.fieldValue}>{toBengaliNumerals(`${data.dutyDays} দিন`)}</Text>
             </View>
             <View style={styles.fieldRow}>
               <Text style={styles.fieldLabel}>{"অনুপস্থিত দিন:"}</Text>
-              <Text style={styles.fieldValue}>{`${data.absentDays} দিন`}</Text>
+              <Text style={styles.fieldValue}>{toBengaliNumerals(`${data.absentDays} দিন`)}</Text>
             </View>
             <View style={styles.fieldRow}>
               <Text style={styles.fieldLabel}>{"বোনাস দিন:"}</Text>
-              <Text style={styles.fieldValue}>{`+${data.bonusDays} দিন`}</Text>
+              <Text style={styles.fieldValue}>{toBengaliNumerals(`+${data.bonusDays} দিন`)}</Text>
             </View>
           </View>
 
@@ -271,7 +284,7 @@ const SalarySlipDocument = ({ data, printDate }: { data: SalarySlipData; printDa
 
         <View style={styles.footer}>
           <Text>{"* এই স্লিপটি বিসমিল্লাহ প্রতিষ্ঠানের অভ্যন্তরীণ ব্যবহারের জন্য তৈরি।"}</Text>
-          <Text>{"মুদ্রণের তারিখ: " + printDate}</Text>
+          <Text>{"মুদ্রণের তারিখ: " + toBengaliNumerals(printDate)}</Text>
         </View>
       </View>
 

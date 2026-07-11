@@ -615,6 +615,7 @@ export default function PayrollPage() {
                       data={{
                         employeeName: item.employees?.full_name || '',
                         employeeCode: item.employees?.employee_code || '',
+                        employeePhone: item.employees?.mobile_number || '',
                         branchName: 'প্রধান শাখা',
                         categoryName: item.employees?.categories?.category_name || 'কারিগর',
                         month: selectedMonth,

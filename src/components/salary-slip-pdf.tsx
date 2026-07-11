@@ -11,10 +11,16 @@ const LazyPDFWrapper = dynamic(
   { ssr: false }
 );
 
-// কারেন্সি কমা সেপারেটর হেল্পার ফাংশন
+// কারেন্সি কমা সেপারেটর হেল্পার ফাংশন — বাঙলা সংখ্যায়
 const formatCurrency = (amount: number | string) => {
   const num = Number(amount);
-  return isNaN(num) ? '0' : num.toLocaleString('en-US');
+  return isNaN(num) ? '০' : toBengaliNumerals(num.toLocaleString('en-US'));
+};
+
+// বাঙলা সংখ্যায় রূপান্তর (০১২৩৪৫৬৭৮৯)
+const toBengaliNumerals = (str: string | number): string => {
+  const bd = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+  return String(str).replace(/[0-9]/g, (d) => bd[parseInt(d)]);
 };
 
 // Timezone-safe payment date formatter
@@ -24,15 +30,16 @@ function formatPaymentDate(isoString: string | null): string {
   const parts = datePart.split('-');
   if (parts.length === 3) {
     const yearTwoDigits = parts[0].slice(-2);
-    return `${parts[2]}-${parts[1]}-${yearTwoDigits}`;
+    return toBengaliNumerals(`${parts[2]}-${parts[1]}-${yearTwoDigits}`);
   }
-  return isoString;
+  return toBengaliNumerals(isoString);
 }
 
 interface SalarySlipProps {
   data: {
     employeeName: string;
     employeeCode: string;
+    employeePhone: string;
     branchName: string;
     categoryName: string;
     month: string;
@@ -143,9 +150,12 @@ export function SalarySlipDownloadButton({ data }: SalarySlipProps) {
                 <div className="border border-gray-150 rounded-lg p-3 bg-gray-50">
                   <div className="bg-[#8B0000] text-white py-1.5 text-center font-bold rounded-md mb-2">{"কর্মচারির বিবরণ"}</div>
                   <div className="space-y-1 font-semibold text-gray-700">
-                    <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"কোড:"}</span><span className="font-bold">{data.employeeCode}</span></div>
+                    <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"কোড:"}</span><span className="font-bold">{toBengaliNumerals(data.employeeCode)}</span></div>
                     <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"নাম:"}</span><span className="font-bold">{data.employeeName}</span></div>
                     <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"ক্যাটাগরি:"}</span><span className="font-bold">{data.categoryName}</span></div>
+                    {data.employeePhone && (
+                      <div className="flex justify-between pt-1"><span>{"মোবাইল:"}</span><span className="font-bold" dir="ltr">{toBengaliNumerals(data.employeePhone)}</span></div>
+                    )}
                   </div>
                 </div>
 
@@ -153,10 +163,10 @@ export function SalarySlipDownloadButton({ data }: SalarySlipProps) {
                 <div className="border border-gray-150 rounded-lg p-3 bg-gray-50">
                   <div className="bg-[#8B0000] text-white py-1.5 text-center font-bold rounded-md mb-2">{"হাজিরা বিবরণী"}</div>
                   <div className="space-y-1 font-semibold text-gray-700">
-                    <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"বেতন মাস:"}</span><span className="font-bold">{`${data.month}-${data.year}`}</span></div>
-                    <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"উপস্থিত দিন:"}</span><span className="font-bold">{`${data.dutyDays} দিন`}</span></div>
-                    <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"অনুপস্থিত দিন:"}</span><span className="font-bold">{`${data.absentDays} দিন`}</span></div>
-                    <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"বোনাস দিন:"}</span><span className="font-bold">{`+${data.bonusDays} দিন`}</span></div>
+                    <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"বেতন মাস:"}</span><span className="font-bold">{toBengaliNumerals(`${data.month}-${data.year}`)}</span></div>
+                    <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"উপস্থিত দিন:"}</span><span className="font-bold">{toBengaliNumerals(`${data.dutyDays} দিন`)}</span></div>
+                    <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"অনুপস্থিত দিন:"}</span><span className="font-bold">{toBengaliNumerals(`${data.absentDays} দিন`)}</span></div>
+                    <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"বোনাস দিন:"}</span><span className="font-bold">{toBengaliNumerals(`+${data.bonusDays} দিন`)}</span></div>
                   </div>
                 </div>
 
@@ -167,9 +177,9 @@ export function SalarySlipDownloadButton({ data }: SalarySlipProps) {
                     <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"মূল বেতন:"}</span><span className="font-bold">{formatCurrency(data.monthlySalary)} {"টাকা"}</span></div>
                     <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"প্রাপ্য বেতন:"}</span><span className="font-bold">{formatCurrency(data.grossSalary)} {"টাকা"}</span></div>
                     <div className="flex justify-between border-b border-gray-200 pb-1"><span>{"অগ্রিম (-):"}</span><span className="font-bold">-{formatCurrency(data.advanceAmount)} {"টাকা"}</span></div>
-                    <div className="bg-[#F4C430] text-black font-bold p-1.5 rounded-md flex justify-between mt-2">
+                    <div className="bg-[#8B0000] text-white font-bold p-3 rounded-md flex justify-between mt-2">
                       <span>{"নিট বেতন:"}</span>
-                      <span className="text-[#8B0000]">{formatCurrency(data.netSalary)} {"টাকা"}</span>
+                      <span className="text-white">{formatCurrency(data.netSalary)} {"টাকা"}</span>
                     </div>
 
                     {/* পেমেন্ট স্ট্যাটাস ব্যাজ */}
@@ -199,7 +209,7 @@ export function SalarySlipDownloadButton({ data }: SalarySlipProps) {
               {/* ফুটার */}
               <div className="text-[10px] text-gray-400 text-center border-t border-gray-100 pt-2 font-semibold">
                 <p>{"* এই স্লিপটি বিসমিল্লাহ প্রতিষ্ঠানের অভ্যন্তরীণ ব্যবহারের জন্য তৈরি।"}</p>
-                <p>{"মুদ্রণের তারিখ: "}{printDate}</p>
+                <p>{"মুদ্রণের তারিখ: "}{toBengaliNumerals(printDate)}</p>
               </div>
 
             </div>
