@@ -17,6 +17,16 @@ export default function RootLayout({
       lang="bn"
       className="h-full antialiased"
     >
+      <head>
+        {/* Preconnect to Google Fonts origins — font download starts sooner than @import in CSS */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        {/* Inter + Tiro Bangla loaded via <link> instead of CSS @import for earlier discovery */}
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Tiro+Bangla:ital,wght@0,400;0,600;0,700;1,400;1,700&display=swap"
+        />
+      </head>
       <body className="min-h-full flex flex-col bg-[--color-bg] text-[--color-foreground]">
         <GlobalToastProvider />
         {children}

@@ -88,6 +88,7 @@ export function DashboardLayoutClient({ children }: DashboardLayoutClientProps) 
               <Link
                 key={item.path}
                 href={item.path}
+                prefetch={true}
                 className={`sidebar-link ${isActive ? 'active' : ''}`}
               >
                 <Icon className={`h-[18px] w-[18px] ${isActive ? 'text-[--color-primary]' : 'text-[--color-foreground-muted]'}`} />
@@ -147,6 +148,7 @@ export function DashboardLayoutClient({ children }: DashboardLayoutClientProps) 
               <Link
                 key={item.path}
                 href={item.path}
+                prefetch={true}
                 onClick={() => setIsSidebarOpen(false)}
                 className={`sidebar-link ${isActive ? 'active' : ''}`}
               >
@@ -220,6 +222,7 @@ export function DashboardLayoutClient({ children }: DashboardLayoutClientProps) 
               <Link
                 key={item.path}
                 href={item.path}
+                prefetch={true}
                 className={`flex flex-col items-center justify-center gap-0.5 py-1 px-2 rounded-lg transition-all duration-150 active:scale-90 ${
                   isActive ? 'text-[--color-primary]' : 'text-[--color-foreground-muted]'
                 }`}

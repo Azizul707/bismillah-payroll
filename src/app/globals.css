@@ -3,8 +3,8 @@
    Phase 1: CSS Variables, Fonts, Animations
    ===================================================================== */
 
-/* 1. Google Fonts — Tiro Bangla + Inter only */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Tiro+Bangla:ital,wght@0,400;0,600;0,700;1,400;1,700&display=swap');
+/* 1. Google Fonts — font-face for Tiro Bangla digit sanitization (no fetch, uses local fallback) */
+/*    Preconnect + stylesheet links moved to layout.tsx for earlier discovery */
 
 /* 2. Tailwind CSS v4 */
 @import "tailwindcss";
