@@ -14,9 +14,29 @@ interface ReportItem extends PayrollItem {
   } | null;
 }
 
+// পেজ রিফ্রেশের পরেও ব্যবহারকারীর নির্বাচিত মাস/বছর মনে রাখার জন্য লোকাল স্টোরেজ কী
+const REPORT_MONTH_KEY = 'bismillah_report_month';
+const REPORT_YEAR_KEY = 'bismillah_report_year';
+
+// লোকাল স্টোরেজ থেকে সংরক্ষিত মাস/বছর পড়া (না থাকলে বর্তমান মাস ডিফল্ট)
+function getInitialReportMonth(): string {
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem(REPORT_MONTH_KEY);
+    if (saved) return saved;
+  }
+  return String(new Date().getMonth() + 1).padStart(2, '0');
+}
+function getInitialReportYear(): string {
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem(REPORT_YEAR_KEY);
+    if (saved) return saved;
+  }
+  return String(new Date().getFullYear());
+}
+
 export default function ReportsPage() {
-  const [selectedMonth, setSelectedMonth] = useState('06');
-  const [selectedYear, setSelectedYear] = useState('2026');
+  const [selectedMonth, setSelectedMonth] = useState<string>(getInitialReportMonth());
+  const [selectedYear, setSelectedYear] = useState<string>(getInitialReportYear());
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [categoriesList, setCategoriesList] = useState<{ id: string; category_name: string }[]>([]);
   const [reportItems, setReportItems] = useState<ReportItem[]>([]);
@@ -93,6 +113,14 @@ export default function ReportsPage() {
       console.error('Error loading report:', err);
     } finally {
       setLoading(false);
+    }
+  }, [selectedMonth, selectedYear]);
+
+  // মাস/বছর পরিবর্তন হলে লোকাল স্টোরেজে সংরক্ষণ করা (রিফ্রেশের পরেও মনে রাখবে)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(REPORT_MONTH_KEY, selectedMonth);
+      localStorage.setItem(REPORT_YEAR_KEY, selectedYear);
     }
   }, [selectedMonth, selectedYear]);
 

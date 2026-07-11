@@ -3,9 +3,10 @@
 import React, { useEffect, useState, useCallback, use } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { 
-  ArrowLeft, 
-  User, 
+import {
+  ArrowLeft,
+  AlertCircle,
+  User,
   Phone, 
   Briefcase, 
   DollarSign, 
@@ -103,6 +104,73 @@ export default function EmployeeProfilePage({ params }: PageProps) {
 
   const [advanceAmount, setAdvanceAmount] = useState('');
   const [advanceReason, setAdvanceReason] = useState('');
+
+  // অগ্রিম কর্তনের মাস/বছর নির্বাচন (ডিফল্ট: বর্তমান মাস ও বছর) — এবং সেই মাস লক কিনা তা ট্র্যাক করা
+  const [advanceMonth, setAdvanceMonth] = useState('');
+  const [advanceYear, setAdvanceYear] = useState('');
+  const [advanceMonthLocked, setAdvanceMonthLocked] = useState(false);
+  const [advanceMonthLoading, setAdvanceMonthLoading] = useState(false);
+
+  // মাস ও বছরের তালিকা
+  const bengaliMonths = [
+    { code: '01', name: 'জানুয়ারি' },
+    { code: '02', name: 'ফেব্রুয়ারি' },
+    { code: '03', name: 'মার্চ' },
+    { code: '04', name: 'এপ্রিল' },
+    { code: '05', name: 'মে' },
+    { code: '06', name: 'জুন' },
+    { code: '07', name: 'জুলাই' },
+    { code: '08', name: 'আগস্ট' },
+    { code: '09', name: 'সেপ্টেম্বর' },
+    { code: '10', name: 'অক্টোবর' },
+    { code: '11', name: 'নভেম্বর' },
+    { code: '12', name: 'ডিসেম্বর' },
+  ];
+  const advanceYears = ['2026', '2027', '2028', '2029', '2030'];
+
+  // বর্তমান মাস/বছর দিয়ে ডিফল্ট সেট করা (Next.js 15-এর কঠিন Rule #1: microtask defer)
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      await Promise.resolve();
+      if (active) {
+        const now = new Date();
+        setAdvanceMonth(String(now.getMonth() + 1).padStart(2, '0'));
+        setAdvanceYear(String(now.getFullYear()));
+      }
+    })();
+    return () => { active = false; };
+  }, []);
+
+  // নির্বাচিত মাসের বেতন হিসাব লক করা হয়েছে কিনা তা চেক করা (Option A: সতর্কতা দেখানো, কিন্তু বাধা দেওয়া হবে না)
+  useEffect(() => {
+    let active = true;
+    if (!advanceMonth || !advanceYear) {
+      setAdvanceMonthLocked(false);
+      return;
+    }
+    (async () => {
+      await Promise.resolve();
+      if (!active) return;
+      try {
+        setAdvanceMonthLoading(true);
+        const { data, error } = await db.payrolls()
+          .select('is_locked')
+          .eq('payroll_month', advanceMonth)
+          .eq('payroll_year', advanceYear)
+          .maybeSingle();
+        if (!active) return;
+        if (error) throw error;
+        setAdvanceMonthLocked(!!data?.is_locked);
+      } catch (err) {
+        console.error('Advance month lock check failed:', err);
+        setAdvanceMonthLocked(false);
+      } finally {
+        if (active) setAdvanceMonthLoading(false);
+      }
+    })();
+    return () => { active = false; };
+  }, [advanceMonth, advanceYear]);
 
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -302,18 +370,20 @@ export default function EmployeeProfilePage({ params }: PageProps) {
     }
   }
 
-  // ঘ. অগ্রিম বেতন যুক্ত করার হ্যান্ডলার
+  // ঘ. অগ্রিম বেতন যুক্ত করার হ্যান্ডলার (কর্তন মাস/বছর ব্যবহারকারী নির্বাচন করতে পারবেন)
   async function handleAdvanceSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!advanceMonth || !advanceYear) {
+      setErrorMsg('অগ্রিম কর্তনের মাস ও বছর নির্বাচন করা বাধ্যতামূলক।');
+      return;
+    }
     try {
       setSubmitting(true);
-      const currentMonth = '06';
-      const currentYear = '2026';
       await AdvanceService.addAdvance({
         employeeId,
         amount: Number(advanceAmount),
-        month: currentMonth,
-        year: currentYear,
+        month: advanceMonth,
+        year: advanceYear,
         reason: advanceReason,
         adminId: '00000000-0000-0000-0000-000000000000',
         adminName: getCurrentUserName()
@@ -757,6 +827,46 @@ export default function EmployeeProfilePage({ params }: PageProps) {
                   className="w-full rounded-lg border p-2.5 font-bold"
                 />
               </div>
+
+              {/* কর্তন মাস ও বছর নির্বাচন — অগ্রিম কোন মাসের বেতন থেকে কাটা হবে */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="block">{"কর্তনের মাস"}</label>
+                  <select
+                    value={advanceMonth}
+                    onChange={(e) => setAdvanceMonth(e.target.value)}
+                    className="w-full rounded-lg border p-2.5 font-bold"
+                  >
+                    {bengaliMonths.map(m => (
+                      <option key={m.code} value={m.code}>{m.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="block">{"কর্তনের বছর"}</label>
+                  <select
+                    value={advanceYear}
+                    onChange={(e) => setAdvanceYear(e.target.value)}
+                    className="w-full rounded-lg border p-2.5 font-bold"
+                  >
+                    {advanceYears.map(y => (
+                      <option key={y} value={y}>{y}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Option A: যদি নির্বাচিত মাস ইতিমধ্যে লক করা হয়, তবে সতর্কতা দেখান (কিন্তু বাধা দেবেন না) */}
+              {advanceMonthLoading ? (
+                <p className="text-xs font-semibold text-gray-400">{"মাসের অবস্থা যাচাই করা হচ্ছে..."}</p>
+              ) : advanceMonthLocked ? (
+                <div className="flex items-start gap-2 rounded-lg bg-amber-50 border border-amber-200 p-3">
+                  <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                  <p className="text-xs font-bold text-amber-800">
+                    {"এই মাসের বেতন হিসাব ইতিমধ্যে লক করা হয়েছে — এই অগ্রিম সেখান থেকে কাটা হবে না। প্রয়োজনে লক আনলক করুন অথবা উন্মুক্ত কোনো মাস নির্বাচন করুন।"}
+                  </p>
+                </div>
+              ) : null}
 
               <div className="space-y-1">
                 <label className="block">{"অগ্রিমের কারণ (ঐচ্ছিক)"}</label>

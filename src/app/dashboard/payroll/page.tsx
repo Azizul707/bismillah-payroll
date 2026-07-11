@@ -74,9 +74,29 @@ type ExtendedPayrollItem = PayrollItem & {
   } | null;
 };
 
+// পেজ রিফ্রেশের পরেও ব্যবহারকারীর নির্বাচিত মাস/বছর মনে রাখার জন্য লোকাল স্টোরেজ কী
+const PAYROLL_MONTH_KEY = 'bismillah_payroll_month';
+const PAYROLL_YEAR_KEY = 'bismillah_payroll_year';
+
+// লোকাল স্টোরেজ থেকে সংরক্ষিত মাস/বছর পড়া (না থাকলে বর্তমান মাস ডিফল্ট)
+function getInitialPayrollMonth(): string {
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem(PAYROLL_MONTH_KEY);
+    if (saved) return saved;
+  }
+  return String(new Date().getMonth() + 1).padStart(2, '0');
+}
+function getInitialPayrollYear(): string {
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem(PAYROLL_YEAR_KEY);
+    if (saved) return saved;
+  }
+  return String(new Date().getFullYear());
+}
+
 export default function PayrollPage() {
-  const [selectedMonth, setSelectedMonth] = useState('06'); // জুন
-  const [selectedYear, setSelectedYear] = useState('2026');   // ২০২৬
+  const [selectedMonth, setSelectedMonth] = useState<string>(getInitialPayrollMonth());
+  const [selectedYear, setSelectedYear] = useState<string>(getInitialPayrollYear());
   const [payroll, setPayroll] = useState<Payroll | null>(null);
   const [payrollItems, setPayrollItems] = useState<ExtendedPayrollItem[]>([]);
   
@@ -188,21 +208,13 @@ export default function PayrollPage() {
     }
   }, [selectedMonth, selectedYear]);
 
-  // Dynamic current month/year init from system clock (Next.js 15 deferred microtask)
+  // মাস/বছর পরিবর্তন হলে লোকাল স্টোরেজে সংরক্ষণ করা (রিফ্রেশের পরেও মনে রাখবে)
   useEffect(() => {
-    let active = true;
-    (async () => {
-      await Promise.resolve();
-      if (active) {
-        const now = new Date();
-        const m = String(now.getMonth() + 1).padStart(2, '0');
-        const y = now.getFullYear().toString();
-        setSelectedMonth(m);
-        setSelectedYear(y);
-      }
-    })();
-    return () => { active = false; };
-  }, []);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(PAYROLL_MONTH_KEY, selectedMonth);
+      localStorage.setItem(PAYROLL_YEAR_KEY, selectedYear);
+    }
+  }, [selectedMonth, selectedYear]);
 
   // Load data on mount and when month/year selection changes
   useEffect(() => {
