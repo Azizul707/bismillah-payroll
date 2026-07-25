@@ -4,7 +4,7 @@ import { AuditService } from './audit';
 
 export class PayrollService {
   /**
-   * নির্দিষ্ট মাস ও বছরের জন্য নির্দিষ্ট কর্মচারীর উপস্থিত দিন (Duty Days) এবং অনুপস্থিত দিন হিসেব করা (টাইমজোন-সেফ ও প্রো-রাটা স্কেলড)
+   * নির্দিষ্ট মাস ও বছরের জন্য নির্দিষ্ট কর্মচারীর উপস্থিত দিন (Duty Days) এবং অনুপস্থিত দিন হিসেব করা (টাইমজোন-সেফ ও ৩০ দিনের গাণিতিক সীমানায়)
    */
   static async calculateDutyDays(
     employeeId: string,
@@ -36,6 +36,11 @@ export class PayrollService {
 
     // ৩. মাস জুড়ে প্রতিদিনের স্ট্যাটাস চেক করা (অ্যালগরিদম লুপ)
     for (let day = 1; day <= totalDaysInMonth; day++) {
+      // 🛡️ কোম্পানির ৩০ দিনের ফিক্সড নিয়ম: ৩১ তারিখের দিনটিকে অনুপস্থিত বা মিসড ডে হিসেবে গণনা করা হবে না (সম্পূর্ণ ইগনোর করা হবে)
+      if (day === 31) {
+        continue;
+      }
+
       const currentDayStr = `${year}-${month}-${String(day).padStart(2, '0')}`;
 
       // ক. কর্মচারীর জয়েনিং ডেটের আগের দিনগুলো "missed days" হিসেবে গণ্য হবে
@@ -59,13 +64,8 @@ export class PayrollService {
       }
     }
 
-    // ৪. ৩০ দিনের ধ্রুবক নিয়ম (30-day Constant Divisor Rule) অনুযায়ী প্রো-রাটা স্কেলিং করা
-    // (মোট অনুপস্থিত দিন ও ডিউটি দিনের যোগফল ২৮, ৩০ বা ৩১ দিনের মাসেও সর্বদা ৩০ এর অনুপাতে থাকবে)
-    const physicalDeductedDays = absentDays + missedDaysDueToJoining;
-    
-    // গাণিতিকভাবে ৩০ দিনে রূপান্তর (Pro-rata proportional scaling)
-    const totalDeductedDays = Math.round((physicalDeductedDays / totalDaysInMonth) * 30);
-    
+    // ৪. ৩০ দিনের ধ্রুবক নিয়ম (30-day Constant Divisor Rule) অনুযায়ী সমন্বয়
+    const totalDeductedDays = absentDays + missedDaysDueToJoining;
     const dutyDays = Math.max(0, 30 - totalDeductedDays);
     const normalizedAbsentDays = 30 - dutyDays; // Enforces absolute 30-day month limit
 
