@@ -226,7 +226,7 @@ export default function ReportsPage() {
       <div className="hidden print:block text-center border-b-2 border-gray-300 pb-4 mb-6">
         <h1 className="text-3xl font-black text-gray-900">{"বিসমিল্লাহ সুইটস এন্ড বেকারি"}</h1>
         <h2 className="text-xl font-bold text-gray-700 mt-1.5">
-          {currentMonthName}{" "}{toBengaliDigits(selectedYear)}{" - মাসিক স্টাফ বেতন রিপোর্ট (বিভাগঃ "}{categoryPrintLabel}{")"}
+          {currentMonthName}{" "}{toBengaliDigits(selectedYear)}{" - মাসিক স্টাফ বেতন রিপোর্ট ( "}{categoryPrintLabel}{")"}
         </h2>
         <p className="text-xs font-semibold text-gray-400 mt-1">{"* এই রিপোর্টটি বিসমিল্লাহ প্রতিষ্ঠানের অভ্যন্তরীণ ব্যবহারের জন্য তৈরি।"}</p>
       </div>
